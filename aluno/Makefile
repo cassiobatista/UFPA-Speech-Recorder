@@ -1,4 +1,4 @@
-target=main.py
+target=UFPA-Speech-Recorder.py
 
 all:
 	python -B $(target)
