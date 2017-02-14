@@ -46,15 +46,15 @@ class UFPARegister(QtGui.QMainWindow):
 
 	# https://pymotw.com/2/zipfile/
 	def compress(self):
-		self.czip = UFPARecord(self)
+		self.czip = UFPAZip(self)
 		self.czip.closed.connect(self.show)
 		self.czip.move(230,30) # try to centralize
-		self.czip.setMinimumSize(900, 700) # define initial size
+		self.czip.setMinimumSize(800, 200) # define initial size
 		self.czip.setWindowTitle(info.TITLE)
 		self.czip.setWindowIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 		self.czip.show()
-		self.hide()
+		#self.hide()
 
 
 	def init_main_screen(self):
