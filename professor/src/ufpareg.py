@@ -24,7 +24,7 @@ from PyQt4 import QtCore, QtGui
 
 import info
 from ufparec import UFPARecord
-from ufpatools import UFPAZip
+from ufpatools import UFPAZip, UFPAUpload
 
 import zipfile
 
@@ -38,13 +38,13 @@ class UFPARegister(QtGui.QMainWindow):
 		super(UFPARegister, self).__init__()
 		self.init_main_screen()
 		self.init_menu()
-		self.config()
 
 	def config(self):
-		if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
-			pass
+		QtGui.QMessageBox.information(self, u'Configurações', u'Coming soon.')
+		return
+		#if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
+		#	pass
 
-	# https://pymotw.com/2/zipfile/
 	def compress(self):
 		self.czip = UFPAZip(self)
 		self.czip.closed.connect(self.show)
@@ -54,8 +54,17 @@ class UFPARegister(QtGui.QMainWindow):
 		self.czip.setWindowIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 		self.czip.show()
-		#self.hide()
 
+	def upload(self):
+		self.up = UFPAUpload(self)
+		self.up.closed.connect(self.show)
+		self.up.move(230,30) # try to centralize
+		self.up.setMinimumSize(800, 300) # define initial size
+		self.up.setWindowTitle(info.TITLE)
+		self.up.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.up.show()
+		#self.hide()
 
 	def init_main_screen(self):
 		self.applier = QtGui.QLineEdit()
@@ -188,7 +197,7 @@ class UFPARegister(QtGui.QMainWindow):
 		act_cfg = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'settings.png')), u'&Configurações', self)
 		act_cfg.setStatusTip(u'Configurar UFPA Speech Recorder')
-		#act_cfg.triggered.connect(self.config)
+		act_cfg.triggered.connect(self.config)
 
 		act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'zip.png')), u'&Compactar', self)
@@ -198,7 +207,7 @@ class UFPARegister(QtGui.QMainWindow):
 		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'&Upload', self)
 		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
-		#act_cloud.triggered.connect(self.config)
+		act_cloud.triggered.connect(self.upload)
 
 		self.statusBar()
 	

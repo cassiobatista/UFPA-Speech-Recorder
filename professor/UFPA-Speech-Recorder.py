@@ -32,7 +32,7 @@ except ImportError:
 try:
 	import pyaudio
 except ImportError:
-	print u'Warning: PyAudio não instalado'
+	print u'Aviso: PyAudio não instalado.'
 	import pip
 	pip.main(['install', 'pyaudio'])
 
