@@ -42,8 +42,6 @@ class UFPARegister(QtGui.QMainWindow):
 	def config(self):
 		QtGui.QMessageBox.information(self, u'Configurações', u'Coming soon.')
 		return
-		#if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
-		#	pass
 
 	def compress(self):
 		self.czip = UFPAZip(self)
@@ -56,6 +54,8 @@ class UFPARegister(QtGui.QMainWindow):
 		self.czip.show()
 
 	def upload(self):
+		QtGui.QMessageBox.information(self, u'Upload', u'Coming soon.')
+		return
 		self.up = UFPAUpload(self)
 		self.up.closed.connect(self.show)
 		self.up.move(230,30) # try to centralize
@@ -64,7 +64,6 @@ class UFPARegister(QtGui.QMainWindow):
 		self.up.setWindowIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 		self.up.show()
-		#self.hide()
 
 	def init_main_screen(self):
 		self.applier = QtGui.QLineEdit()
@@ -214,9 +213,9 @@ class UFPARegister(QtGui.QMainWindow):
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
 		toolbar.addAction(act_about)
-		toolbar.addAction(act_cfg)
+		#toolbar.addAction(act_cfg)
 		toolbar.addAction(act_zip)
-		toolbar.addAction(act_cloud)
+		#toolbar.addAction(act_cloud)
 
 	def closeEvent(self, event):
 		reply = QtGui.QMessageBox.question(self, u'Fechar UFPA Speech Recorder', 

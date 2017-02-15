@@ -27,6 +27,7 @@ import os
 import time
 
 from PyQt4 import QtCore, QtGui
+from ufpatools import UFPAZip, UFPAUpload
 
 import logging
 import StringIO
@@ -75,6 +76,17 @@ class UFPARecord(QtGui.QMainWindow):
 		self.init_main_screen()
 		self.init_menu()
 		self.statusBar()
+
+	def compress(self):
+		self.czip = UFPAZip(self)
+		self.czip.closed.connect(self.show)
+		self.czip.move(230,30) # try to centralize
+		self.czip.setMinimumSize(800, 200) # define initial size
+		self.czip.setWindowTitle(info.TITLE)
+		self.czip.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.czip.show()
+
 
 	def init_main_screen(self):
 		self.txt_file = QtGui.QLineEdit()
@@ -242,6 +254,11 @@ class UFPARecord(QtGui.QMainWindow):
 		act_cfg.setStatusTip(u'Configurar UFPA Speech Recorder')
 		#act_cfg.triggered.connect(self.config)
 
+		act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'zip.png')), u'&Compactar', self)
+		act_zip.setStatusTip(u'Compactar pasta de áudios em um arquivo .zip')
+		act_zip.triggered.connect(self.compress)
+
 		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'&Upload', self)
 		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
@@ -258,8 +275,9 @@ class UFPARecord(QtGui.QMainWindow):
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
 		toolbar.addAction(act_about)
-		toolbar.addAction(act_cfg)
-		toolbar.addAction(act_cloud)
+		#toolbar.addAction(act_cfg)
+		toolbar.addAction(act_zip)
+		#toolbar.addAction(act_cloud)
 		toolbar.addAction(act_add_new)
 
 	def remove_data(self):

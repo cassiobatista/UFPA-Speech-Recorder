@@ -24,14 +24,20 @@ import info
 
 from PyQt4 import QtCore, QtGui
 
+
 class UFPAConfig(QtGui.QWidget):
-	def __init__(self, last_dir):
+	def __init__(self, parent=None):
 		super(UFPAConfig, self).__init__()
-		self.last_dir = last_dir
+		self.parent = parent
+		self.init_main_screen()
+
+	def init_main_screen(self):
+		pass
 
 	def config(self):
 		if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
 			pass
+
 
 class UFPAZip(QtGui.QMainWindow):
 
@@ -130,8 +136,9 @@ class UFPAZip(QtGui.QMainWindow):
 			for root, dirs, files in os.walk(dirname):
 				ziproot = re.sub('.*'+basename, basename, root)
 				for f in files:
-					filepath = os.path.join(ziproot, f)
-					zf.write(os.path.join(root, f), arcname=filepath)
+					longpath = os.path.join(root, f)
+					shortpath = os.path.join(ziproot, f)
+					zf.write(longpath, arcname=shortpath)
 			zf.close()
 
 			QtGui.QMessageBox.information(self, 
