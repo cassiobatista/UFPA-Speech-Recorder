@@ -24,6 +24,7 @@ from PyQt4 import QtCore, QtGui
 
 import info
 from ufparec import UFPARecord
+from ufpatools import UFPAZip, UFPAUpload
 
 import zipfile
 
@@ -43,31 +44,27 @@ class UFPARegister(QtGui.QMainWindow):
 		if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
 			pass
 
-	# https://pymotw.com/2/zipfile/
 	def compress(self):
-		try:
-			import zlib
-			compression = zipfile.ZIP_DEFLATED
-		except ImportError:
-			compression = zipfile.ZIP_STORED
+		self.czip = UFPAZip(self)
+		self.czip.closed.connect(self.show)
+		self.czip.move(230,30) # try to centralize
+		self.czip.setMinimumSize(800, 200) # define initial size
+		self.czip.setWindowTitle(info.TITLE)
+		self.czip.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.czip.show()
 
-		dirname = QtGui.QFileDialog.getExistingDirectory(self,
-				u'Selecionar pasta contendo arquivos a serem compactados', 
-				self.last_dir, QtGui.QFileDialog.ShowDirsOnly)
-
-		dirname = unicode(str(dirname.toUtf8()), 'utf-8')
-
-		if dirname is not u'':
-			os.chdir(info.ROOT_DIR_PATH)
-			dirname = dirname.replace(info.ROOT_DIR_PATH + '/', '')
-			#dirname = dirname.replace(info.ROOT_DIR_PATH, '')
-			##self.txt_file.setText(filename)
-			##self.last_dir = os.path.dirname(filename)
-			#zf = zipfile.ZipFile('src/meuzip.zip', mode='w')
-			#for img in os.listdir(os.path.join(info.SRC_DIR_PATH, 'images')):
-			#	zf.write(os.path.join(info.SRC_DIR_PATH, 'images', img),
-			#				arcname=img, compress_type=compression)
-			#zf.close()
+	def upload(self):
+		QtGui.QMessageBox.information(self, u'Upload', u'Coming soon.')
+		return
+		self.up = UFPAUpload(self)
+		self.up.closed.connect(self.show)
+		self.up.move(230,30) # try to centralize
+		self.up.setMinimumSize(800, 300) # define initial size
+		self.up.setWindowTitle(info.TITLE)
+		self.up.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.up.show()
 
 	def init_main_screen(self):
 		self.applier = QtGui.QLineEdit()
@@ -208,14 +205,14 @@ class UFPARegister(QtGui.QMainWindow):
 
 		if info.DEBUG:
 			self.applier.setText(u'Nelson Cruz Sampaio Neto')
-			self.group.setItemText(0, 'GDK')
+			self.group.setCurrentIndex(1)
 			self.school.setText(u'Universidade Federal do Pará')
 			self.student.setText(u'Cássio Trindade Batista')
 			self.city.setText(u'Belém')
-			self.state.setItemText(0, u'Pará')
+			self.state.setCurrentIndex(1)
 			self.gender_m.setChecked(True)
-			self.age.setItemText(0, u'7')
-			self.grade.setItemText(0, u'7 serie')
+			self.age.setCurrentIndex(1)
+			self.grade.setCurrentIndex(1)
 
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -243,20 +240,16 @@ class UFPARegister(QtGui.QMainWindow):
 		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'&Upload', self)
 		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
-		#act_cloud.triggered.connect(self.config)
+		#act_cloud.triggered.connect(self.upload)
 
 		self.statusBar()
 	
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
 		toolbar.addAction(act_about)
-		toolbar.addAction(act_cfg)
+		#toolbar.addAction(act_cfg)
 		toolbar.addAction(act_zip)
-		toolbar.addAction(act_cloud)
-
-		#menubar = self.menuBar()
-		#file_menu = menubar.addMenu('&Arquivo')
-		#file_menu.addAction(act_exit)
+		#toolbar.addAction(act_cloud)
 
 	def closeEvent(self, event):
 		reply = QtGui.QMessageBox.question(self, u'Fechar UFPA Speech Recorder', 
@@ -359,16 +352,12 @@ class UFPARegister(QtGui.QMainWindow):
 
 	def clear(self):
 		self.applier.clear()
-		self.group.setItemText(0, u'')
 		self.group.setCurrentIndex(0)
 		self.school.clear()
 		self.student.clear()
 		self.city.clear()
-		self.state.setItemText(0, u'')
 		self.state.setCurrentIndex(0)
-		self.age.setItemText(0, u'')
 		self.age.setCurrentIndex(0)
-		self.grade.setItemText(0, u'')
 		self.grade.setCurrentIndex(0)
 
 		self.gender_f.setChecked(False)

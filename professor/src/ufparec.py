@@ -177,18 +177,18 @@ class UFPARecord(QtGui.QMainWindow):
 		gb_semaphore.setLayout(hb_semaphore)
 		# -------------
 
-		self.newreg_button = QtGui.QPushButton()
-		self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'add.png')))
-		self.newreg_button.setIconSize(QtCore.QSize(65,65))
-		self.newreg_button.setStatusTip(u'Cadastrar nova criança')
-		self.newreg_button.setToolTip(u'Novo registro')
-		self.newreg_button.setMinimumSize(90,90)
-		self.newreg_button.setFlat(True)
-		self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
-					'{background-color: black; border: 3px solid lightgray;}')
-		self.newreg_button.setEnabled(False)
-		self.newreg_button.clicked.connect(self.new_reg)
+		#self.newreg_button = QtGui.QPushButton()
+		#self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
+		#			info.SRC_DIR_PATH, 'images', 'add.png')))
+		#self.newreg_button.setIconSize(QtCore.QSize(65,65))
+		#self.newreg_button.setStatusTip(u'Cadastrar nova criança')
+		#self.newreg_button.setToolTip(u'Novo registro')
+		#self.newreg_button.setMinimumSize(90,90)
+		#self.newreg_button.setFlat(True)
+		#self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
+		#			'{background-color: black; border: 3px solid lightgray;}')
+		#self.newreg_button.setEnabled(False)
+		#self.newreg_button.clicked.connect(self.new_reg)
 
 		self.prev_button = QtGui.QPushButton()
 		self.prev_button.setIcon(QtGui.QIcon(os.path.join(
@@ -217,10 +217,12 @@ class UFPARecord(QtGui.QMainWindow):
 		self.rec_button.clicked.connect(self.start_rec)
 
 		hb_rec = QtGui.QHBoxLayout()
-		hb_rec.addWidget(self.newreg_button)
+		#hb_rec.addWidget(self.newreg_button)
 		hb_rec.addStretch()
 		hb_rec.addWidget(self.prev_button)
 		hb_rec.addWidget(self.rec_button)
+		hb_rec.addSpacing(100)
+		hb_rec.addStretch()
 
 		gb_rec = QtGui.QGroupBox()
 		gb_rec.setLayout(hb_rec)

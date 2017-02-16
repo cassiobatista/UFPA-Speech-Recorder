@@ -27,6 +27,7 @@ import os
 import time
 
 from PyQt4 import QtCore, QtGui
+from datetime import datetime
 
 import logging
 import StringIO
@@ -203,6 +204,19 @@ class UFPARecord(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.rec_button.clicked.connect(self.start_rec)
 
+		self.stop_button = QtGui.QPushButton()
+		self.stop_button.setIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'stop.png')))
+		self.stop_button.setIconSize(QtCore.QSize(75,75))
+		self.stop_button.setStatusTip(u'Iniciar a gravação de áudio')
+		self.stop_button.setToolTip(u'Iniciar gravação')
+		self.stop_button.setShortcut('Ctrl+Space')
+		self.stop_button.setMinimumSize(90,90)
+		self.stop_button.setFlat(True)
+		self.stop_button.setStyleSheet('QPushButton:hover:!pressed' + 
+					'{background-color: black; border: 3px solid lightgray;}')
+		#self.stop_button.clicked.connect(self.stop_rec)
+
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'next.png')))
@@ -221,6 +235,7 @@ class UFPARecord(QtGui.QMainWindow):
 		hb_rec.addStretch()
 		hb_rec.addWidget(self.prev_button)
 		hb_rec.addWidget(self.rec_button)
+		hb_rec.addWidget(self.stop_button)
 		hb_rec.addWidget(self.next_button)
 
 		gb_rec = QtGui.QGroupBox()
@@ -271,8 +286,8 @@ class UFPARecord(QtGui.QMainWindow):
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
 		toolbar.addAction(act_about)
-		toolbar.addAction(act_cfg)
-		toolbar.addAction(act_cloud)
+		#toolbar.addAction(act_cfg)
+		#toolbar.addAction(act_cloud)
 		toolbar.addAction(act_add_new)
 
 	def remove_data(self):
@@ -345,7 +360,9 @@ class UFPARecord(QtGui.QMainWindow):
 
 		if reply == QtGui.QMessageBox.Yes:
 			self.hide()
-			self.parent.clear()
+			if info.DEBUG:
+				self.parent.clear()
+			self.close()
 			self.parent.show()
 		else:
 			return
@@ -724,6 +741,7 @@ class UFPARecord(QtGui.QMainWindow):
 	
 		speech = [False] * self.SPEECH_CHUNK
 		speech_count = 0
+		speech_begin = False
 	
 		chunk_count = 0
 		while self.thread.recording and chunk_count < 150: # ~ 6.9 seconds
@@ -738,18 +756,21 @@ class UFPARecord(QtGui.QMainWindow):
 	
 			silence = (int(max(snd_data)) < self.THRESHOLD)
 	
-			if not silence and speech_count < self.SPEECH_CHUNK:
+			if not speech_begin and not silence and speech_count < self.SPEECH_CHUNK:
 				speech[speech_count] = True
 				speech_count += 1
 			elif silence and all(speech) == False:
 				speech = [False] * self.SPEECH_CHUNK
 				speech_count = 0
-			elif silence and all(speech):
-				silence_count += 1
+			#elif silence and all(speech):
+			#	silence_count += 1
 	
-			# end point detection
-			if silence_count > self.SILENCE_CHUNK:
-				break
+			## end point detection
+			#if silence_count > self.SILENCE_CHUNK:
+			#	break
+
+			if all(speech):
+				time = time.gettime
 	
 		del(speech, speech_count, silence_count)
 		sample_width = p.get_sample_size(self.FORMAT)
@@ -778,7 +799,6 @@ class UFPARecord(QtGui.QMainWindow):
 		del(sample_width, data)
 		self.thread.recording = False
 		self.block_mic = True
-
 
 class LogBuffer(QtCore.QObject, StringIO.StringIO):
 
