@@ -49,6 +49,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 	thread = None
 	block_mic = True
+	mic_ready = False
 
 	recording = False
 	paused = False
@@ -176,19 +177,6 @@ class UFPARecord(QtGui.QMainWindow):
 		gb_semaphore = QtGui.QGroupBox()
 		gb_semaphore.setLayout(hb_semaphore)
 		# -------------
-
-		#self.newreg_button = QtGui.QPushButton()
-		#self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
-		#			info.SRC_DIR_PATH, 'images', 'add.png')))
-		#self.newreg_button.setIconSize(QtCore.QSize(65,65))
-		#self.newreg_button.setStatusTip(u'Cadastrar nova criança')
-		#self.newreg_button.setToolTip(u'Novo registro')
-		#self.newreg_button.setMinimumSize(90,90)
-		#self.newreg_button.setFlat(True)
-		#self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
-		#			'{background-color: black; border: 3px solid lightgray;}')
-		#self.newreg_button.setEnabled(False)
-		#self.newreg_button.clicked.connect(self.new_reg)
 
 		self.prev_button = QtGui.QPushButton()
 		self.prev_button.setIcon(QtGui.QIcon(os.path.join(
@@ -501,9 +489,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.byellow.update()
 			self.bgreen.update()
 
-			self.newreg_button.show()
-			self.newreg_button.setEnabled(True)
-
 			font = QtGui.QFont(self.wshow.font())
 			font.setPointSize(18)
 			self.wshow.setFont(font)
@@ -565,8 +550,12 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.update()
 		else:
 			if info.SYS_OS == 'linux':
-				self.block_mic = True
+				self.block_mic = False
 				threading.Thread(target=self.record_to_file).start()
+
+			# wait for mic
+			while not self.mic_ready:
+				pass
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.green)
@@ -586,7 +575,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			self.block_mic = False
+			#self.block_mic = False
 
 			self.bred.update()
 			self.byellow.update()
@@ -647,6 +636,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bred.setIcon(QtGui.QIcon())
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
+
+			self.finished = False
 		elif not self.paused and self.recording: # pause recording
 			self.thread.paused = True
 
@@ -654,6 +645,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.clear()
 
 			if len(self.text) > 1:
+				print 'tem texto'
 				self.thread.wprev(1)
 				time.sleep(.25)
 
@@ -692,11 +684,6 @@ class UFPARecord(QtGui.QMainWindow):
 
 	def wprev(self):
 		self.thread.wprev(1)
-		#else:
-		#if len(self.text) < 1:
-		#	self.thread.wprev(1)
-		#else:
-		#	self.thread.wprev(2)
 
 		time.sleep(.25)
 		self.rec_button.click()
@@ -748,7 +735,9 @@ class UFPARecord(QtGui.QMainWindow):
 	
 		speech = [False] * self.SPEECH_CHUNK
 		speech_count = 0
-	
+
+		self.mic_ready = True
+
 		chunk_count = 0
 		while self.thread.recording and chunk_count < 150: # ~ 6.9 seconds
 			if self.paused:
@@ -781,6 +770,8 @@ class UFPARecord(QtGui.QMainWindow):
 		stream.close()
 		p.terminate()
 	
+		self.mic_ready = False
+
 		return sample_width, r
 	
 	def record_to_file(self):
@@ -835,8 +826,7 @@ class LogThread(QtCore.QThread):
 		return super(LogThread, self).start()
 
 	def wprev(self, idx):
-		if self.i >= 1:
-			self.i -= idx
+		self.i -= idx
 
 	def run(self):
 		with open(self.wlfile, 'r') as f:
@@ -855,9 +845,11 @@ class LogThread(QtCore.QThread):
 			if self.paused:
 				logging.info('_gray')
 				while self.paused:
-					print 'topausado', self.i
 					pass
 				continue
+
+			if self.i < 0:
+				self.i = 0
 
 			try:
 				logging.info(unicode(self.wordlist[self.i], 'utf-8'))

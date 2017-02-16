@@ -136,8 +136,8 @@ class UFPAZip(QtGui.QMainWindow):
 			for root, dirs, files in os.walk(dirname):
 				ziproot = re.sub('.*'+basename, basename, root)
 				for f in files:
-					longpath  = unicode(os.path.join(root, f), 'utf-8')
-					shortpath = unicode(os.path.join(ziproot, f), 'utf-8')
+					longpath  = unicode(str(os.path.join(root, f)), 'utf-8')
+					shortpath = unicode(str(os.path.join(ziproot, f)), 'utf-8')
 					zf.write(longpath, arcname=shortpath)
 			zf.close()
 
