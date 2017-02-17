@@ -385,7 +385,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.update()
 		elif act == '_yellow':
 			if info.SYS_OS == 'windows':
-				self.block_mic = True
+				#self.block_mic = False
 				threading.Thread(target=self.record_to_file).start()
 
 			color = QtGui.QPalette(self.bred.palette())
@@ -549,8 +549,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setToolTip(u'Reiniciar gravação')
 			self.rec_button.update()
 		else:
+			self.block_mic = False
 			if info.SYS_OS == 'linux':
-				self.block_mic = False
 				threading.Thread(target=self.record_to_file).start()
 
 			# wait for mic

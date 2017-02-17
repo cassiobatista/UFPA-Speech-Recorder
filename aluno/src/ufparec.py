@@ -165,19 +165,6 @@ class UFPARecord(QtGui.QMainWindow):
 		gb_semaphore.setLayout(hb_semaphore)
 		# -------------
 
-		self.newreg_button = QtGui.QPushButton()
-		self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'add.png')))
-		self.newreg_button.setIconSize(QtCore.QSize(65,65))
-		self.newreg_button.setStatusTip(u'Cadastrar nova criança')
-		self.newreg_button.setToolTip(u'Novo registro')
-		self.newreg_button.setMinimumSize(90,90)
-		self.newreg_button.setFlat(True)
-		self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
-					'{background-color: black; border: 3px solid lightgray;}')
-		self.newreg_button.setEnabled(False)
-		self.newreg_button.clicked.connect(self.new_reg)
-
 		self.prev_button = QtGui.QPushButton()
 		self.prev_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'previous.png')))
@@ -231,7 +218,6 @@ class UFPARecord(QtGui.QMainWindow):
 		self.next_button.clicked.connect(self.wnext)
 
 		hb_rec = QtGui.QHBoxLayout()
-		hb_rec.addWidget(self.newreg_button)
 		hb_rec.addStretch()
 		hb_rec.addWidget(self.prev_button)
 		hb_rec.addWidget(self.rec_button)
@@ -509,9 +495,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
-
-			self.newreg_button.show()
-			self.newreg_button.setEnabled(True)
 
 			font = QtGui.QFont(self.wshow.font())
 			font.setPointSize(18)
