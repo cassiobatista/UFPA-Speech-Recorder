@@ -42,12 +42,17 @@ import shutil
 
 import info
 
+from ufpatools import UFPAZip, UFPAUpload
 
 class UFPARecord(QtGui.QMainWindow):
 
 	closed = QtCore.pyqtSignal()
+
 	thread = None
 	block_mic = True
+	mic_ready = False
+
+	text = None
 
 	recording = False
 	paused = False
@@ -62,6 +67,16 @@ class UFPARecord(QtGui.QMainWindow):
 	SILENCE_CHUNK = 20
 
 	last_dir = info.ROOT_DIR_PATH
+
+	def compress(self):
+		self.czip = UFPAZip(self)
+		self.czip.closed.connect(self.show)
+		self.czip.move(230,30) # try to centralize
+		self.czip.setMinimumSize(800, 200) # define initial size
+		self.czip.setWindowTitle(info.TITLE)
+		self.czip.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.czip.show()
 
 	def __init__(self, parent, state, school, name, uid):
 		super(UFPARecord, self).__init__()
@@ -191,19 +206,6 @@ class UFPARecord(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.rec_button.clicked.connect(self.start_rec)
 
-		self.stop_button = QtGui.QPushButton()
-		self.stop_button.setIcon(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'stop.png')))
-		self.stop_button.setIconSize(QtCore.QSize(75,75))
-		self.stop_button.setStatusTip(u'Iniciar a gravação de áudio')
-		self.stop_button.setToolTip(u'Iniciar gravação')
-		self.stop_button.setShortcut('Ctrl+Space')
-		self.stop_button.setMinimumSize(90,90)
-		self.stop_button.setFlat(True)
-		self.stop_button.setStyleSheet('QPushButton:hover:!pressed' + 
-					'{background-color: black; border: 3px solid lightgray;}')
-		#self.stop_button.clicked.connect(self.stop_rec)
-
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'next.png')))
@@ -221,8 +223,8 @@ class UFPARecord(QtGui.QMainWindow):
 		hb_rec.addStretch()
 		hb_rec.addWidget(self.prev_button)
 		hb_rec.addWidget(self.rec_button)
-		hb_rec.addWidget(self.stop_button)
 		hb_rec.addWidget(self.next_button)
+		hb_rec.addStretch()
 
 		gb_rec = QtGui.QGroupBox()
 		gb_rec.setLayout(hb_rec)
@@ -256,8 +258,13 @@ class UFPARecord(QtGui.QMainWindow):
 		act_cfg.setStatusTip(u'Configurar UFPA Speech Recorder')
 		#act_cfg.triggered.connect(self.config)
 
+		act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'zip.png')), u'&Compactar', self)
+		act_zip.setStatusTip(u'Compactar pasta de áudios em um arquivo .zip')
+		act_zip.triggered.connect(self.compress)
 		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'&Upload', self)
+
 		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
 		#act_cloud.triggered.connect(self.config)
 
@@ -273,6 +280,7 @@ class UFPARecord(QtGui.QMainWindow):
 		toolbar.addAction(act_exit)
 		toolbar.addAction(act_about)
 		#toolbar.addAction(act_cfg)
+		toolbar.addAction(act_zip)
 		#toolbar.addAction(act_cloud)
 		toolbar.addAction(act_add_new)
 
@@ -346,9 +354,8 @@ class UFPARecord(QtGui.QMainWindow):
 
 		if reply == QtGui.QMessageBox.Yes:
 			self.hide()
-			if info.DEBUG:
+			if not info.DEBUG:
 				self.parent.clear()
-			self.close()
 			self.parent.show()
 		else:
 			return
@@ -392,7 +399,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.update()
 		elif act == '_yellow':
 			if info.SYS_OS == 'windows':
-				self.block_mic = True
 				threading.Thread(target=self.record_to_file).start()
 
 			color = QtGui.QPalette(self.bred.palette())
@@ -556,9 +562,13 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setToolTip(u'Reiniciar gravação')
 			self.rec_button.update()
 		else:
+			self.block_mic = False
 			if info.SYS_OS == 'linux':
-				self.block_mic = True
 				threading.Thread(target=self.record_to_file).start()
+
+			# wait for mic
+			while not self.mic_ready:
+				pass
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.green)
@@ -578,7 +588,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			self.block_mic = False
+			#self.block_mic = False
 
 			self.bred.update()
 			self.byellow.update()
@@ -639,13 +649,20 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bred.setIcon(QtGui.QIcon())
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
+
+			self.finished = False
 		elif not self.paused and self.recording: # pause recording
 			self.thread.paused = True
+
+			self.text = unicode(self.wshow.text().toUtf8(), 'utf-8')
+			self.wshow.clear()
+			time.sleep(.25)
+
 			self.paused = True
 			self.thread.recording = False
 
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
-						info.SRC_DIR_PATH, 'images', 'rec.png')))
+						info.SRC_DIR_PATH, 'images', 'resume.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
 			self.rec_button.setStatusTip(u'Retomar gravação da última palavra')
 			self.rec_button.setToolTip(u'Retomar gravação')
@@ -657,6 +674,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bred.setIcon(QtGui.QIcon())
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
+
+			time.sleep(.25)
 		elif self.paused and self.recording: # resume recording
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'pause.png')))
@@ -674,11 +693,25 @@ class UFPARecord(QtGui.QMainWindow):
 			self.paused = False
 			self.thread.paused = False
 
+			self.text = None
+
 	def wprev(self):
 		self.thread.wprev()
 
+		time.sleep(.25)
+		self.rec_button.click()
+
+		self.paused = False
+		self.thread.paused = False
+
 	def wnext(self):
 		self.thread.wnext()
+
+		time.sleep(.25)
+		self.rec_button.click()
+
+		self.paused = False
+		self.thread.paused = False
 
 	def pause_rec(self, stream):
 		stream.stop_stream()
@@ -724,14 +757,13 @@ class UFPARecord(QtGui.QMainWindow):
 	
 		speech = [False] * self.SPEECH_CHUNK
 		speech_count = 0
-		speech_begin = False
-	
-		chunk_count = 0
-		while self.thread.recording and chunk_count < 150: # ~ 6.9 seconds
+
+		self.mic_ready = True
+
+		while self.thread.recording:
 			if self.paused:
 				self.pause_rec(stream)
 
-			chunk_count += 1
 			snd_data = array('h', stream.read(self.CHUNK_SIZE))
 			if sys.byteorder == 'big':
 				snd_data.byteswap()
@@ -739,21 +771,14 @@ class UFPARecord(QtGui.QMainWindow):
 	
 			silence = (int(max(snd_data)) < self.THRESHOLD)
 	
-			if not speech_begin and not silence and speech_count < self.SPEECH_CHUNK:
+			if not silence and speech_count < self.SPEECH_CHUNK:
 				speech[speech_count] = True
 				speech_count += 1
 			elif silence and all(speech) == False:
 				speech = [False] * self.SPEECH_CHUNK
 				speech_count = 0
-			#elif silence and all(speech):
-			#	silence_count += 1
-	
-			## end point detection
-			#if silence_count > self.SILENCE_CHUNK:
-			#	break
-
-			if all(speech):
-				time = time.gettime
+			elif silence and all(speech):
+				silence_count += 1
 	
 		del(speech, speech_count, silence_count)
 		sample_width = p.get_sample_size(self.FORMAT)
@@ -761,8 +786,10 @@ class UFPARecord(QtGui.QMainWindow):
 		stream.close()
 		p.terminate()
 	
+		self.mic_ready = False
+
 		return sample_width, r
-	
+
 	def record_to_file(self):
 		"""
 		Records from the microphone and outputs the resulting data to a file
@@ -770,18 +797,19 @@ class UFPARecord(QtGui.QMainWindow):
 		sample_width, data = self.record()
 		data = struct.pack('<' + ('h'*len(data)), *data)
 	
-		path = str(self.wshow.text().toUtf8())
-		if path is not '':
-			wf = wave.open(unicode(path, 'utf-8') + '.wav', 'wb')
+		if self.text is not None:
+			wf = wave.open(self.text + '.wav', 'wb')
 			wf.setnchannels(self.CHANNELS)
 			wf.setsampwidth(sample_width)
 			wf.setframerate(self.RATE)
 			wf.writeframes(data)
+			print '############# escrevebdo'
 			wf.close()
 
 		del(sample_width, data)
 		self.thread.recording = False
 		self.block_mic = True
+
 
 class LogBuffer(QtCore.QObject, StringIO.StringIO):
 
@@ -805,7 +833,6 @@ class LogThread(QtCore.QThread):
 	paused = False
 	wordlist = None
 	error = False
-	i = 0
 
 	def __init__(self, wlfile, parent=None):
 		self.wlfile = wlfile
@@ -815,18 +842,16 @@ class LogThread(QtCore.QThread):
 		return super(LogThread, self).start()
 
 	def wnext(self):
-		self.recording = False
 		self.i += 1
 
 	def wprev(self):
-		if self.i >= 0:
-			self.i -= 1
+		self.i -= 1
 
 	def run(self):
 		with open(self.wlfile, 'r') as f:
 			self.wordlist = f.read().splitlines()
+			self.i = 0
 
-		#wcolors = ['_red', '_yellow', '_green', '_gray']
 		wcolors = ['_red', '_yellow', '_green']
 		while self.i < len(self.wordlist):
 			for c in wcolors:
@@ -842,9 +867,9 @@ class LogThread(QtCore.QThread):
 					pass
 				continue
 
-			# skip comments (#) on .txt file
-			while self.wordlist[self.i][0] == '#':
-				self.i += 1
+			if self.i < 0:
+				self.i = 0
+
 			try:
 				logging.info(unicode(self.wordlist[self.i], 'utf-8'))
 				self.recording = True
@@ -855,8 +880,6 @@ class LogThread(QtCore.QThread):
 
 			while self.recording:
 				pass
-
-			#self.i += 1
 
 		if self.error:
 			logging.info('_error')

@@ -51,7 +51,7 @@ if __name__ == '__main__':
 	reg = UFPARegister()
 	reg.move(150,100) # try to centralize
 	reg.setMinimumSize(800, 350) # define initial size
-	reg.setMaximumSize(1000, 500) # define max size
+	reg.setMaximumSize(1000, 400) # define max size
 	reg.setWindowTitle(u'UFPA Speech Recorder')
 	reg.setWindowIcon(QtGui.QIcon(os.path.join('src', 'images', 'ufpa.png')))
 	reg.show()

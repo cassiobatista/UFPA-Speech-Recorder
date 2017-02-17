@@ -107,12 +107,13 @@ class UFPARecord(QtGui.QMainWindow):
 		hb_wlist.addWidget(self.txt_button)
 		hb_wlist.addSpacing(20)
 
-		gb_wlist = QtGui.QGroupBox()
-		gb_wlist.setLayout(hb_wlist)
+		vb_wlist = QtGui.QVBoxLayout()
+		vb_wlist.addSpacing(10)
+		vb_wlist.addLayout(hb_wlist)
 		# -------------
 
 		self.wshow = QtGui.QLabel()
-		self.wshow.setFixedWidth(800)
+		self.wshow.setMinimumWidth(800)
 		self.wshow.setFixedHeight(180)
 		self.wshow.setStatusTip(u'As palavras da lista serão exibidas aqui')
 		self.wshow.setAlignment(QtCore.Qt.AlignCenter)
@@ -205,7 +206,6 @@ class UFPARecord(QtGui.QMainWindow):
 		self.rec_button.clicked.connect(self.start_rec)
 
 		hb_rec = QtGui.QHBoxLayout()
-		#hb_rec.addWidget(self.newreg_button)
 		hb_rec.addStretch()
 		hb_rec.addWidget(self.prev_button)
 		hb_rec.addWidget(self.rec_button)
@@ -217,7 +217,7 @@ class UFPARecord(QtGui.QMainWindow):
 		# -------------
 
 		self.vb_layout_main = QtGui.QVBoxLayout()
-		self.vb_layout_main.addWidget(gb_wlist)
+		self.vb_layout_main.addLayout(vb_wlist)
 		self.vb_layout_main.addWidget(gb_wshow)
 		self.vb_layout_main.addWidget(gb_semaphore)
 		self.vb_layout_main.addWidget(gb_rec)
@@ -289,7 +289,7 @@ class UFPARecord(QtGui.QMainWindow):
 		if self.finished:
 			QtGui.qApp.quit()
 		else:
-			reply = QtGui.QMessageBox.question(self, u'Fechar app', 
+			reply = QtGui.QMessageBox.question(self, u'Fechar ' + info.TITLE, 
 						u'A gravação não foi concluída.\n\n' + 
 						u'Você deseja realmente sair?\n', 
 						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
@@ -311,7 +311,7 @@ class UFPARecord(QtGui.QMainWindow):
 		if self.finished:
 			QtGui.qApp.quit()
 		else:
-			reply = QtGui.QMessageBox.question(self, u'Fechar app', 
+			reply = QtGui.QMessageBox.question(self, u'Fechar ' + info.TITLE, 
 						u'A gravação não foi concluída.\n\n' + 
 						u'Você deseja realmente sair?\n', 
 						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
@@ -385,7 +385,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.update()
 		elif act == '_yellow':
 			if info.SYS_OS == 'windows':
-				#self.block_mic = False
 				threading.Thread(target=self.record_to_file).start()
 
 			color = QtGui.QPalette(self.bred.palette())

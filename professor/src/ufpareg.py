@@ -71,12 +71,9 @@ class UFPARegister(QtGui.QMainWindow):
 		self.applier.setMinimumWidth(500)
 
 		hb_applier = QtGui.QHBoxLayout()
-		hb_applier.addWidget(QtGui.QLabel('Aplicador'))
+		hb_applier.addWidget(QtGui.QLabel(u'Aplicador(a)'))
 		hb_applier.addWidget(self.applier)
-
-		gb_applier = QtGui.QGroupBox(u'Dados do Professor')
-		gb_applier.setLayout(hb_applier)
-		# -------------
+		## -------------
 
 		self.school = QtGui.QLineEdit()
 		self.school.setStatusTip(u'Ex.:  "Escola Estadual de Ensino ' + 
@@ -84,12 +81,10 @@ class UFPARegister(QtGui.QMainWindow):
 		self.school.setMinimumWidth(500)
 
 		hb_school = QtGui.QHBoxLayout()
-		hb_school.addWidget(QtGui.QLabel('Escola'))
+		hb_school.addWidget(QtGui.QLabel(u'Escola'))
+		hb_school.addSpacing(20)
 		hb_school.addWidget(self.school)
-
-		gb_school = QtGui.QGroupBox()
-		gb_school.setLayout(hb_school)
-		# -------------
+		## -------------
 
 		self.city = QtGui.QLineEdit()
 		self.city.setStatusTip(u'Ex.:  "Belo Horizonte"')
@@ -110,20 +105,21 @@ class UFPARegister(QtGui.QMainWindow):
 			self.state.addItem(st)
 
 		hb_location = QtGui.QHBoxLayout()
-		hb_location.addWidget(QtGui.QLabel('Cidade'))
+		hb_location.addWidget(QtGui.QLabel(u'Cidade'))
+		hb_location.addSpacing(15)
 		hb_location.addWidget(self.city)
 		hb_location.addSpacing(30) # --
-		hb_location.addWidget(QtGui.QLabel('Estado'))
+		hb_location.addWidget(QtGui.QLabel(u'Estado'))
 		hb_location.addWidget(self.state)
-
-		gb_location = QtGui.QGroupBox()
-		gb_location.setLayout(hb_location)
 		# -------------
 
+		self.radio_group = QtGui.QButtonGroup()
 		self.gender_m = QtGui.QRadioButton(u'M')
 		self.gender_m.setStatusTip(u'Masculino')
 		self.gender_f = QtGui.QRadioButton(u'F')
 		self.gender_f.setStatusTip(u'Feminino')
+		self.radio_group.addButton(self.gender_m)
+		self.radio_group.addButton(self.gender_f)
 
 		self.age = QtGui.QComboBox()
 		self.age.addItem(u'')
@@ -132,19 +128,31 @@ class UFPARegister(QtGui.QMainWindow):
 
 		hb_compl = QtGui.QHBoxLayout()
 		hb_compl.addWidget(QtGui.QLabel(u'Gênero'))
+		hb_compl.addSpacing(12) # --
 		hb_compl.addWidget(self.gender_m)
 		hb_compl.addWidget(self.gender_f)
 		hb_compl.addSpacing(50) # --
 		hb_compl.addWidget(QtGui.QLabel(u'Idade'))
 		hb_compl.addWidget(self.age)
 		hb_compl.addStretch()
-
-		gb_compl = QtGui.QGroupBox()
-		gb_compl.setLayout(hb_compl)
 		# -------------
 
+		vb_form = QtGui.QVBoxLayout()
+		vb_form.addSpacing(10)
+		vb_form.addLayout(hb_applier)
+		vb_form.addSpacing(18)
+		vb_form.addLayout(hb_school)
+		vb_form.addSpacing(18)
+		vb_form.addLayout(hb_location)
+		vb_form.addSpacing(18)
+		vb_form.addLayout(hb_compl)
+
+		gb_form = QtGui.QGroupBox(u'Dados do(a) Aplicador(a)')
+		gb_form.setLayout(vb_form)
+		# ------------- #
+
 		self.start = QtGui.QPushButton('Cadastrar')
-		self.start.setStatusTip(u'Cadastrar professor e iniciar ' +
+		self.start.setStatusTip(u'Cadastrar professor(a) e iniciar ' +
 					u'a gravação de áudio')
 		self.start.setShortcut('Ctrl+Space')
 		self.start.setMinimumSize(150,50)
@@ -161,14 +169,12 @@ class UFPARegister(QtGui.QMainWindow):
 		# -------------
 
 		self.vb_layout_main = QtGui.QVBoxLayout()
-		self.vb_layout_main.addWidget(gb_applier)
-		self.vb_layout_main.addWidget(gb_school)
-		self.vb_layout_main.addWidget(gb_location)
-		self.vb_layout_main.addWidget(gb_compl)
+		self.vb_layout_main.addWidget(gb_form)
 		self.vb_layout_main.addWidget(gb_start)
 
 		wg_central = QtGui.QWidget()
 		wg_central.setLayout(self.vb_layout_main)
+
 		self.setCentralWidget(wg_central)
 
 		if info.DEBUG:
@@ -181,30 +187,30 @@ class UFPARegister(QtGui.QMainWindow):
 			self.age.setCurrentIndex(1)
 
 	def init_menu(self):
-		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'x.png')), u'&Sair', self)
+		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
+					'images', 'x.png')), u'&Sair', self)
 		act_exit.setShortcut('Ctrl+Q')
 		act_exit.setStatusTip(u'Fechar UFPA Speech Recorder')
 		act_exit.triggered.connect(self.quit_app)
 
-		act_about = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'about.png')), u'&Sobre', self)
+		act_about = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
+					'images', 'about.png')), u'&Sobre', self)
 		act_about.setShortcut('Ctrl+I')
 		act_about.setStatusTip(u'Sobre o UFPA Speech Recorder')
 		act_about.triggered.connect(self.about)
 
-		act_cfg = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'settings.png')), u'&Configurações', self)
+		act_cfg = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
+					'images', 'settings.png')), u'&Configurações', self)
 		act_cfg.setStatusTip(u'Configurar UFPA Speech Recorder')
 		act_cfg.triggered.connect(self.config)
 
-		act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'zip.png')), u'&Compactar', self)
+		act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
+					'images', 'zip.png')), u'&Compactar', self)
 		act_zip.setStatusTip(u'Compactar pasta de áudios em um arquivo .zip')
 		act_zip.triggered.connect(self.compress)
 
-		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'&Upload', self)
+		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
+					'images', 'cloud.png')), u'&Upload', self)
 		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
 		act_cloud.triggered.connect(self.upload)
 
@@ -288,7 +294,7 @@ class UFPARegister(QtGui.QMainWindow):
 
 			with open('1NFO.me.txt', 'w') as f:
 				f.write(u'Dados do Aplicador\n')
-				f.write(u'Nome: '   + applier  + '\n')
+				f.write(u'Nome: '   + applier + '\n')
 				f.write(u'Escola: ' + school  + '\n')
 				f.write(u'Idade: '  + age     + '\n')
 				f.write(u'Cidade: ' + city    + '\n')
@@ -314,7 +320,9 @@ class UFPARegister(QtGui.QMainWindow):
 		self.age.setItemText(0, u'')
 		self.age.setCurrentIndex(0)
 
+		self.radio_group.setExclusive(False)
 		self.gender_f.setChecked(False)
 		self.gender_m.setChecked(False)
+		self.radio_group.setExclusive(True)
 
 ### EOF ###

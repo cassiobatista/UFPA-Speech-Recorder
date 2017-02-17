@@ -99,9 +99,11 @@ class UFPAZip(QtGui.QMainWindow):
 
 		self.setCentralWidget(wg_central)
 
+		self.select_zipdir()
+
 	def select_zipdir(self):
 		dirname = QtGui.QFileDialog.getExistingDirectory(self,
-				u'Selecionar pasta contendo arquivos a serem compactados', 
+				u'Selecione a pasta a ser compactada', 
 				self.last_dir, QtGui.QFileDialog.ShowDirsOnly)
 
 		dirname = unicode(str(dirname.toUtf8()), 'utf-8')
@@ -136,9 +138,10 @@ class UFPAZip(QtGui.QMainWindow):
 			for root, dirs, files in os.walk(dirname):
 				ziproot = re.sub('.*'+basename, basename, root)
 				for f in files:
-					longpath = os.path.join(root, f)
-					shortpath = os.path.join(ziproot, f)
-					zf.write(longpath, arcname=shortpath)
+					longpath  = unicode(str(os.path.join(root, f)), 'utf-8')
+					shortpath = unicode(str(os.path.join(ziproot, f)), 'utf-8')
+					zf.write(longpath,
+							arcname=shortpath.encode(sys.stdout.encoding))
 			zf.close()
 
 			QtGui.QMessageBox.information(self, 

@@ -19,7 +19,7 @@ import sys
 import os
 import platform
 
-DEBUG = False
+DEBUG = True
 
 SYS_OS = platform.system().lower()
 SYS_HOME_PATH = 'HOMEPATH' if SYS_OS == 'windows' else 'HOME'

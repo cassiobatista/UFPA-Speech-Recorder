@@ -69,7 +69,7 @@ class UFPARegister(QtGui.QMainWindow):
 	def init_main_screen(self):
 		self.applier = QtGui.QLineEdit()
 		self.applier.setStatusTip(u'Ex.:  "Nelson Cruz Sampaio Neto"')
-		self.applier.setMinimumWidth(800)
+		self.applier.setMinimumWidth(500)
 
 		self.group = QtGui.QComboBox()
 		self.group.addItem(u'')
@@ -83,38 +83,32 @@ class UFPARegister(QtGui.QMainWindow):
 		hb_applier.addWidget(QtGui.QLabel('Grupo'))
 		hb_applier.addWidget(self.group)
 
-		gb_applier = QtGui.QGroupBox()
+		gb_applier = QtGui.QGroupBox(u'Campos para o(a) aplicador(a)')
 		gb_applier.setLayout(hb_applier)
 		# -------------
 
 		self.school = QtGui.QLineEdit()
 		self.school.setStatusTip(u'Ex.:  "Escola Estadual de Ensino ' + 
 					u'Fundamental e Médio Doutor Freitas"')
-		self.school.setMinimumWidth(800)
+		self.school.setMinimumWidth(500)
 
 		hb_school = QtGui.QHBoxLayout()
 		hb_school.addWidget(QtGui.QLabel('Escola'))
 		hb_school.addWidget(self.school)
-
-		gb_school = QtGui.QGroupBox()
-		gb_school.setLayout(hb_school)
 		# -------------
 
 		self.student = QtGui.QLineEdit()
 		self.student.setStatusTip(u'Ex.:  "Cassio Trindade Batista"')
-		self.student.setMinimumWidth(800)
+		self.student.setMinimumWidth(500)
 
 		hb_student = QtGui.QHBoxLayout()
 		hb_student.addWidget(QtGui.QLabel('Aluno'))
 		hb_student.addWidget(self.student)
-
-		gb_student = QtGui.QGroupBox()
-		gb_student.setLayout(hb_student)
 		# -------------
 
 		self.city = QtGui.QLineEdit()
 		self.city.setStatusTip(u'Ex.:  "Belo Horizonte"')
-		self.city.setMinimumWidth(300)
+		self.city.setMinimumWidth(250)
 
 		states = [u'Acre', u'Alagoas', u'Amapá', u'Amazonas', u'Bahia',
 					u'Ceará', u'Distrito Federal', u'Espírito Santo', u'Goiás', 
@@ -136,9 +130,6 @@ class UFPARegister(QtGui.QMainWindow):
 		hb_location.addSpacing(150) # --
 		hb_location.addWidget(QtGui.QLabel('Estado'))
 		hb_location.addWidget(self.state)
-
-		gb_location = QtGui.QGroupBox()
-		gb_location.setLayout(hb_location)
 		# -------------
 
 		self.gender_m = QtGui.QRadioButton(u'M')
@@ -163,15 +154,25 @@ class UFPARegister(QtGui.QMainWindow):
 		hb_compl.addWidget(QtGui.QLabel(u'Gênero'))
 		hb_compl.addWidget(self.gender_m)
 		hb_compl.addWidget(self.gender_f)
-		hb_compl.addSpacing(150) # --
+		hb_compl.addSpacing(50) # --
 		hb_compl.addWidget(QtGui.QLabel(u'Idade'))
 		hb_compl.addWidget(self.age)
-		hb_compl.addSpacing(150) # --
+		hb_compl.addSpacing(50) # --
 		hb_compl.addWidget(QtGui.QLabel(u'Série'))
 		hb_compl.addWidget(self.grade)
+		hb_compl.addStretch()
 
-		gb_compl = QtGui.QGroupBox()
-		gb_compl.setLayout(hb_compl)
+		vb_form = QtGui.QVBoxLayout()
+		vb_form.addLayout(hb_school)
+		vb_form.addSpacing(20)
+		vb_form.addLayout(hb_student)
+		vb_form.addSpacing(20)
+		vb_form.addLayout(hb_location)
+		vb_form.addSpacing(20)
+		vb_form.addLayout(hb_compl)
+
+		gb_form = QtGui.QGroupBox(u'Campos para o(a) aluno(a)')
+		gb_form.setLayout(vb_form)
 		# -------------
 
 		self.start = QtGui.QPushButton('Cadastrar')
@@ -193,10 +194,7 @@ class UFPARegister(QtGui.QMainWindow):
 
 		self.vb_layout_main = QtGui.QVBoxLayout()
 		self.vb_layout_main.addWidget(gb_applier)
-		self.vb_layout_main.addWidget(gb_school)
-		self.vb_layout_main.addWidget(gb_student)
-		self.vb_layout_main.addWidget(gb_location)
-		self.vb_layout_main.addWidget(gb_compl)
+		self.vb_layout_main.addWidget(gb_form)
 		self.vb_layout_main.addWidget(gb_start)
 
 		wg_central = QtGui.QWidget()
@@ -323,7 +321,8 @@ class UFPARegister(QtGui.QMainWindow):
 			os.chdir(school)
 
 			# path: src/state/school/firstname_uid
-			os.mkdir(student.split()[0].lower() + self.uid)
+			if not os.path.exists(student.split()[0].lower() + self.uid):
+				os.mkdir(student.split()[0].lower() + self.uid)
 			os.chdir(student.split()[0].lower() + self.uid)
 
 			with open('1NFO.me.txt', 'w') as f:
