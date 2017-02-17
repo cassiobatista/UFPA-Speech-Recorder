@@ -605,6 +605,9 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(act)
 
+			with open(act + '.time.txt', 'w') as f:
+				f.write(datetime.now().strftime('%X:%f\n'))
+
 	def start_rec(self):
 		if self.txt_file.text() == '':
 			QtGui.QMessageBox.warning(self,
@@ -656,7 +659,6 @@ class UFPARecord(QtGui.QMainWindow):
 
 			self.text = unicode(self.wshow.text().toUtf8(), 'utf-8')
 			self.wshow.clear()
-			time.sleep(.25)
 
 			self.paused = True
 			self.thread.recording = False
@@ -668,14 +670,15 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setToolTip(u'Retomar gravação')
 			self.rec_button.update()
 
-			self.prev_button.setEnabled(True)
-			self.next_button.setEnabled(True)
-
 			self.bred.setIcon(QtGui.QIcon())
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
 
-			time.sleep(.25)
+			while self.mic_ready:
+				pass
+
+			self.prev_button.setEnabled(True)
+			self.next_button.setEnabled(True)
 		elif self.paused and self.recording: # resume recording
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'pause.png')))
@@ -687,13 +690,16 @@ class UFPARecord(QtGui.QMainWindow):
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
 
-			self.prev_button.setEnabled(False)
-			self.next_button.setEnabled(False)
-
 			self.paused = False
 			self.thread.paused = False
 
 			self.text = None
+
+			while self.mic_ready:
+				pass
+
+			self.prev_button.setEnabled(False)
+			self.next_button.setEnabled(False)
 
 	def wprev(self):
 		self.thread.wprev()
@@ -752,14 +758,15 @@ class UFPARecord(QtGui.QMainWindow):
 			self.THRESHOLD = int(max(initial_silence)) 
 		del(initial_silence)
 
-		silence = True
-		silence_count = 0
-	
-		speech = [False] * self.SPEECH_CHUNK
-		speech_count = 0
-
 		self.mic_ready = True
 
+		silence = True
+	
+		speech = [False] * self.SPEECH_CHUNK
+		times = [None] * self.SPEECH_CHUNK
+		speech_count = 0
+
+		achei = False
 		while self.thread.recording:
 			if self.paused:
 				self.pause_rec(stream)
@@ -771,23 +778,30 @@ class UFPARecord(QtGui.QMainWindow):
 	
 			silence = (int(max(snd_data)) < self.THRESHOLD)
 	
-			if not silence and speech_count < self.SPEECH_CHUNK:
-				speech[speech_count] = True
-				speech_count += 1
-			elif silence and all(speech) == False:
-				speech = [False] * self.SPEECH_CHUNK
-				speech_count = 0
-			elif silence and all(speech):
-				silence_count += 1
+			if not achei:
+				if not silence and speech_count < self.SPEECH_CHUNK:
+					speech[speech_count] = True
+					times[speech_count]  = datetime.now().strftime('%X:%f\n')
+					speech_count += 1
+				elif silence and all(speech) == False:
+					speech = [False] * self.SPEECH_CHUNK
+					times = [None] * self.SPEECH_CHUNK
+					speech_count = 0
+				elif silence and all(speech):
+					achei = True
+					silence = True
 	
-		del(speech, speech_count, silence_count)
+		if self.text is not None and times[0] is not None:
+			with open(self.text + '.time.txt', 'a') as f:
+				f.write(times.pop(0))
+
+		del(speech, speech_count, times)
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
 		stream.close()
 		p.terminate()
 	
 		self.mic_ready = False
-
 		return sample_width, r
 
 	def record_to_file(self):
