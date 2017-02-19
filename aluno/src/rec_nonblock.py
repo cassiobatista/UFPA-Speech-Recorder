@@ -23,9 +23,11 @@
 
 
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import os
 import time
-import shutil
 
 from PyQt4 import QtCore, QtGui
 from datetime import datetime
@@ -37,6 +39,7 @@ import threading
 import pyaudio
 import wave
 import struct 
+import shutil
 from array import array
 from collections import deque
 
@@ -57,12 +60,11 @@ class UFPARecord(QtGui.QMainWindow):
 	paused = False
 	finished = False
 
-	THRESHOLD = 600
 	FORMAT = pyaudio.paInt16 # bits per sample (short)
 	RATE = 22050 # Hz
 	CHUNK_SIZE = 1024
 	CHANNELS = 1 # mono
-	WINDOW_SIZE = 6
+	SPEECH_CHUNK = 6
 	SILENCE_CHUNK = 20
 
 	last_dir = info.ROOT_DIR_PATH
@@ -398,7 +400,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.update()
 		elif act == '_yellow':
 			if info.SYS_OS == 'windows':
-				threading.Thread(target=self.record_to_file).start()
+				threading.Thread(target=self.record).start()
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
@@ -563,7 +565,7 @@ class UFPARecord(QtGui.QMainWindow):
 		else:
 			self.block_mic = False
 			if info.SYS_OS == 'linux':
-				threading.Thread(target=self.record_to_file).start()
+				threading.Thread(target=self.record, args=(act,)).start()
 
 			# wait for mic
 			while not self.mic_ready:
@@ -604,8 +606,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(act)
 
-			with open(act + '.time.txt', 'w') as f:
-				f.write(datetime.now().strftime('Exibição: %X:%f\n'))
+			with open(act+'.time.txt', 'w') as f:
+				f.write(datetime.now().strftime(u'Exibição da palavra: %X:%f\n'))
 
 	def start_rec(self):
 		if self.txt_file.text() == '':
@@ -616,7 +618,8 @@ class UFPARecord(QtGui.QMainWindow):
 						u'Dica: utilize o botão "Procurar" :)\n')
 			return
 
-		if not self.paused and not self.recording: # start recording
+		# --- start recording ---
+		if not self.paused and not self.recording: 
 			self.recording = True
 			self.txt_button.setEnabled(False)
 
@@ -653,7 +656,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.setIcon(QtGui.QIcon())
 
 			self.finished = False
-		elif not self.paused and self.recording: # pause recording
+		# --- pause recording ---
+		elif not self.paused and self.recording:
 			self.thread.paused = True
 
 			self.text = unicode(self.wshow.text().toUtf8(), 'utf-8')
@@ -665,7 +669,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'resume.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
-			self.rec_button.setStatusTip(u'Retomar gravação da última palavra')
+			self.rec_button.setStatusTip(u'Retomar gravação da palavra atual')
 			self.rec_button.setToolTip(u'Retomar gravação')
 			self.rec_button.update()
 
@@ -678,7 +682,8 @@ class UFPARecord(QtGui.QMainWindow):
 
 			self.prev_button.setEnabled(True)
 			self.next_button.setEnabled(True)
-		elif self.paused and self.recording: # resume recording
+		# --- resume recording ---
+		elif self.paused and self.recording:
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'pause.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
@@ -718,146 +723,185 @@ class UFPARecord(QtGui.QMainWindow):
 		self.paused = False
 		self.thread.paused = False
 
-	def pause_rec(self, stream):
+	def pause_rec(self, stream, timestamps):
 		stream.stop_stream()
+		timestamps.stop()
+
 		while self.paused or self.block_mic:
 			pass
 		stream.start_stream()
 
-	def record(self):
-		"""
-		Record a word or words from the microphone and return the data 
-		as an array of signed shorts.
-		"""
+	# https://people.csail.mit.edu/hubert/pyaudio/docs/
+	# TODO: endianness!
+	def callback_parent(self):
+		def callback(in_data, frame_count, time_info, status):
+			self.qtimes.append(datetime.now())
+			self.qsamples.append(in_data)
+			self.wavlock.acquire()
+			self.wavfile.writeframes(in_data)
+			self.wavlock.release()
+			return (in_data, pyaudio.paContinue)
+		return callback
 
-		def init_window(val, maxl):
-			return deque([val], maxlen=maxl) 
+	def record(self, word):
+		self.qsamples = deque(maxlen=10)
+		self.qtimes = deque(maxlen=4)
+
+		self.wavlock = threading.Lock()
 
 		p = pyaudio.PyAudio()
-		stream = p.open(input=True,
-					format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
-					frames_per_buffer=self.CHUNK_SIZE)
+		stream = p.open(format=self.FORMAT, channels=self.CHANNELS, 
+					rate=self.RATE, frames_per_buffer=self.CHUNK_SIZE,
+					input=True, start=False,
+					stream_callback=self.callback_parent())
 
-		started = None
-		stopped = None
+		#wavname = os.path.join(tempfile.gettempdir(), 'rec.wav')
+		#self.wavfile = wave.open(wavname, 'wb')
+		word = unicode(str(word), 'utf-8') 
+		self.wavfile = wave.open(word+'.wav', 'wb')
+		self.wavfile.setnchannels(self.CHANNELS)
+		self.wavfile.setsampwidth(p.get_sample_size(self.FORMAT))
+		self.wavfile.setframerate(self.RATE)
+
+		print '0: startstream'
+		tstamps = SpeechDetection(self.qsamples, self.qtimes, word)
+		tstamps.start()
+		stream.start_stream()
+
+		self.mic_ready = True
 
 		# wait for GUI
 		if self.block_mic:
-			self.pause_rec(stream)
-	
-		# Estimate initial silence
-		i = 0
-		r = array('h')
-		initial_silence = []
-		while i < 10:
-			if self.paused: # paused: wait for resume button
-				self.pause_rec(stream)
+			self.pause_rec(stream, tstamps)
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
-			#if sys.byteorder == 'big':
-			#	snd_data.byteswap()
-			r.extend(snd_data)
+		while not self.paused:
+			pass
+
+		self.mic_ready = False
+		self.thread.recording = False
+		self.block_mic = True
+
+		while self.wavlock.locked():
+			pass
+
+		self.wavlock.acquire()
+		print '0: wavclose'
+		self.wavfile.close()
+		#print '1: stopstream'
+		#stream.stop_stream() # stop strem
+		print '2: closestream'
+		stream.close() # close stream
+		print '3: pyterm'
+		p.terminate() # destroy pyaudio obj
+		self.wavlock.release()
+
+		tstamps.stop()
+		tstamps.join()
+
+		#os.rename(wavname, self.text+'.wav')
+	
+		self.mic_ready = False
+		self.thread.recording = False
+		self.block_mic = True
+
+# http://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread-in-python
+class SpeechDetection(threading.Thread):
+
+	started = None
+	stopped = None
+
+	THRESHOLD = 600
+
+	def __init__(self, q, t, w):
+		threading.Thread.__init__(self)
+		# or super(SpeechDetection, self).__init__()
+		self.samples = q
+		self.times = t
+		self.word = w
+		self.event = threading.Event()
+
+	def init_window(self, val):
+		return deque([val], maxlen=6) 
+
+	def stop(self):
+		self.event.set()
+		self.samples.clear()
+		self.times.clear()
+
+	def run(self):
+		# Estimate initial silence
+		initial_silence = []
+		for i in xrange(10):
+			while not len(self.samples):
+				pass
+
+			snd_data = array('h', self.samples.pop())
 			initial_silence.append(max(snd_data))
-			i += 1
 
 		if int(max(initial_silence)) > self.THRESHOLD:
 			self.THRESHOLD = int(max(initial_silence)) 
 		del(initial_silence)
 
-		self.mic_ready = True
+		if info.DEBUG:
+			print 'thresh:', self.THRESHOLD
 
-		speech = init_window(False, self.WINDOW_SIZE)
-		times  = init_window(None, self.WINDOW_SIZE)
+		if self.THRESHOLD > 8000:
+			print u'Nível de ruído alto demais.'
+			self.stop()
+			return
+	
+		speech = self.init_window(False)
 		detected = False
-		while self.thread.recording:
-			if self.paused:
-				self.pause_rec(stream)
+		while not self.event.is_set():
+			while not len(self.samples):
+				pass
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
-			times.append(datetime.now())
-			r.extend(snd_data)
-	
+			snd_data = array('h', self.samples.popleft())
 			voiced = (int(max(snd_data)) > self.THRESHOLD)
-			speech.append(voiced)
-	
-			#if not silence and speech_count < self.SPEECH_CHUNK:
-			#	speech[speech_count] = True
-			#	times[speech_count]  = datetime.now().strftime('%X:%f\n')
-			#	speech_count += 1
-			#elif silence and all(speech) == False:
-			#	speech = [False] * self.SPEECH_CHUNK
-			#	times = [None] * self.SPEECH_CHUNK
-			#	speech_count = 0
-			#elif silence and all(speech):
-			#	achei = True
-			#	silence = True
 
-			if not detected and all(speech):
+			speech.append(voiced)
+			if all(speech):
 				detected = True
-				started = times.popleft()
 				break
 
-		silence = init_window(False, self.WINDOW_SIZE)
-		times   = init_window(None,  self.WINDOW_SIZE)
+		if detected:
+			self.started = self.times.popleft()
+			if info.DEBUG:
+				sys.stdout.write('started: %s\n' % self.started)
+
+			with open(self.word+'.time.txt', 'a') as f:
+				f.write(self.started.strftime('Início da fala: %X.%f\n'))
+		else:
+			print 'speech not detected'
+			#self.stop()
+			return
+
+		silence = self.init_window(False)
 		detected = False
-		while self.thread.recording:
-			if self.paused:
-				self.pause_rec(stream)
+		while not self.event.is_set():
+			while not len(self.samples):
+				pass
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
-			times.append(datetime.now())
-			r.extend(snd_data)
-	
+			snd_data = array('h', self.samples.popleft())
 			unvoiced = (int(max(snd_data)) < self.THRESHOLD)
+
 			silence.append(unvoiced)
-	
-			if not detected and all(silence):
+			if all(silence):
 				detected = True
-				stopped = times.popleft()
+				break
 
-		click_time = datetime.now()
-		del(speech, silence, times)
+		if detected:
+			self.stopped = self.times.popleft()
+			if info.DEBUG:
+				sys.stdout.write('stopped: %s\n' % self.stopped)
 
-		if self.text is not None:
-			with open(self.text + '.time.txt', 'a') as f:
-				if started is not None:
-					f.write(started.strftime(u'Início da fala: %X.%f\n'))
-				else:
-					f.write(u'Início da fala: -- \n')
-				if stopped is not None:
-					f.write(stopped.strftime(u'Fim da fala: %X.%f\n'))
-				else:
-					f.write(u'Fim da fala: -- \n')
+			with open(self.word+'.time.txt', 'a') as f:
+				f.write(self.started.strftime('Fim da fala: %X.%f\n'))
+		else:
+			print 'end point not detected'
 
-		with open(self.text + '.time.txt', 'a') as f:
-			f.write(click_time.strftime(u'Ocultação: %X.%f\n'))
-
-		sample_width = p.get_sample_size(self.FORMAT)
-		stream.stop_stream()
-		stream.close()
-		p.terminate()
-	
-		self.mic_ready = False
-		return sample_width, r
-
-	def record_to_file(self):
-		"""
-		Records from the microphone and outputs the resulting data to a file
-		"""
-		sample_width, data = self.record()
-		data = struct.pack('<' + ('h'*len(data)), *data)
-	
-		if self.text is not None:
-			wf = wave.open(self.text + '.wav', 'wb')
-			wf.setnchannels(self.CHANNELS)
-			wf.setsampwidth(sample_width)
-			wf.setframerate(self.RATE)
-			wf.writeframes(data)
-			wf.close()
-
-		del(sample_width, data)
-		self.thread.recording = False
-		self.block_mic = True
+		#self.stop()
+		return
 
 
 class LogBuffer(QtCore.QObject, StringIO.StringIO):

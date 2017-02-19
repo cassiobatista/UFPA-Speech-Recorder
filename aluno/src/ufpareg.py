@@ -207,10 +207,10 @@ class UFPARegister(QtGui.QMainWindow):
 			self.school.setText(u'Universidade Federal do Pará')
 			self.student.setText(u'Cássio Trindade Batista')
 			self.city.setText(u'Belém')
-			self.state.setCurrentIndex(1)
+			self.state.setCurrentIndex(14)
 			self.gender_m.setChecked(True)
-			self.age.setCurrentIndex(1)
-			self.grade.setCurrentIndex(1)
+			self.age.setCurrentIndex(3)
+			self.grade.setCurrentIndex(2)
 
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
