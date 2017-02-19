@@ -339,15 +339,14 @@ class UFPARegister(QtGui.QMainWindow):
 				f.write(u'Gênero: ' + gender  + '\n')
 				f.write(u'Série: '  + grade   + '\n')
 
-			self.rec = UFPARecord(self, state, school, student, self.uid)
-			self.rec.closed.connect(self.show)
-			self.rec.move(230,30) # try to centralize
-			self.rec.setMinimumSize(900, 700) # define initial size
-			self.rec.setWindowTitle(info.TITLE)
-			self.rec.setWindowIcon(QtGui.QIcon(os.path.join(
+			self.module = UFPAModule(self, state, school, student, self.uid)
+			self.module.closed.connect(self.show)
+			self.module.setWindowTitle(info.TITLE)
+			self.module.move(200,150)
+			self.module.show()
+			self.module.setWindowIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'ufpa.png')))
-			self.rec.show()
-			self.hide()
+			self.module.show()
 
 	def clear(self):
 		self.applier.clear()
@@ -362,4 +361,86 @@ class UFPARegister(QtGui.QMainWindow):
 		self.gender_f.setChecked(False)
 		self.gender_m.setChecked(False)
 
-### EOF ###
+
+class UFPAModule(QtGui.QMainWindow):
+
+	closed = QtCore.pyqtSignal()
+
+	def __init__(self, parent, state, school, student, uid):
+		super(UFPAModule, self).__init__()
+		self.parent = parent
+		self.state = state
+		self.school = school
+		self.student = student
+		self.uid = uid
+
+		self.init_main_screen()
+		self.init_menu()
+
+	def init_main_screen(self):
+		book = QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images','read.png'))
+		self.read_button = QtGui.QPushButton()
+		self.read_button.setAutoFillBackground(True)
+		self.read_button.setIcon(book)
+		self.read_button.setStatusTip(u'Iniciar o módulo de leitura')
+		self.read_button.setToolTip(u'Leitura')
+		self.read_button.setIconSize(QtCore.QSize(220,220))
+		self.read_button.clicked.connect(self.read_module)
+
+		headphone = QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images','listen.png'))
+		self.repeat_button = QtGui.QPushButton()
+		self.repeat_button.setAutoFillBackground(True)
+		self.repeat_button.setIcon(headphone)
+		self.repeat_button.setStatusTip(u'Iniciar o módulo de repetição')
+		self.repeat_button.setToolTip(u'Repetição')
+		self.repeat_button.setIconSize(QtCore.QSize(210,220))
+		self.repeat_button.clicked.connect(self.repeat_module)
+
+		hb_buttons = QtGui.QHBoxLayout()
+		hb_buttons.addWidget(self.read_button)
+		hb_buttons.addWidget(self.repeat_button)
+
+		gb_buttons = QtGui.QGroupBox(u'Qual módulo você deseja utilizar agora?')
+		gb_buttons.setLayout(hb_buttons)
+
+		self.vb_layout_main = QtGui.QVBoxLayout()
+		self.vb_layout_main.addWidget(gb_buttons)
+
+		wg_central = QtGui.QWidget()
+		wg_central.setLayout(self.vb_layout_main)
+
+		self.setCentralWidget(wg_central)
+
+	def init_menu(self):
+		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'x.png')), u'&Sair', self)
+		act_exit.setShortcut('Ctrl+Q')
+		act_exit.setStatusTip(u'Fechar')
+		act_exit.triggered.connect(self.close)
+
+		self.statusBar()
+
+		menubar = self.menuBar() 
+		file_menu = menubar.addMenu('&File')
+		file_menu.addAction(act_exit)
+
+	def read_module(self):
+		self.rec = UFPARecord(self.parent, 
+					self.state, self.school, self.student, self.uid)
+		self.rec.closed.connect(self.show)
+		self.rec.move(230,30) # try to centralize
+		self.rec.setMinimumSize(900, 700) # define initial size
+		self.rec.setWindowTitle(info.TITLE)
+		self.rec.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.rec.show()
+		self.parent.hide()
+		self.close()
+
+	def repeat_module(self):
+		QtGui.QMessageBox.information(self, u'Módulo de repetição', u'Coming soon')
+
+
+### EOF 

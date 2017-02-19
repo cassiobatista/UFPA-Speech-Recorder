@@ -25,6 +25,7 @@
 import sys
 import os
 import time
+import shutil
 
 from PyQt4 import QtCore, QtGui
 from ufpatools import UFPAZip, UFPAUpload
@@ -36,9 +37,8 @@ import threading
 import pyaudio
 import wave
 import struct 
+from collections import deque
 from array import array
-
-import shutil
 
 import info
 
@@ -60,8 +60,7 @@ class UFPARecord(QtGui.QMainWindow):
 	RATE = 22050 # Hz
 	CHUNK_SIZE = 1024
 	CHANNELS = 1 # mono
-	SPEECH_CHUNK = 6
-	SILENCE_CHUNK = 20
+	WINDOW_SIZE = 6
 
 	last_dir = info.ROOT_DIR_PATH
 
@@ -574,8 +573,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			#self.block_mic = False
-
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -644,7 +641,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.clear()
 
 			if len(self.text) > 1:
-				print 'tem texto'
 				self.thread.wprev(1)
 				time.sleep(.25)
 
@@ -701,8 +697,12 @@ class UFPARecord(QtGui.QMainWindow):
 		Record a word or words from the microphone and return the data 
 		as an array of signed shorts.
 		"""
+
+		def init_window(val, maxl):
+			return deque([val], maxlen=maxl) 
+
 		p = pyaudio.PyAudio()
-		stream = p.open(input=True, output=True,
+		stream = p.open(input=True, 
 					format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
 					frames_per_buffer=self.CHUNK_SIZE)
 
@@ -714,70 +714,66 @@ class UFPARecord(QtGui.QMainWindow):
 		i = 0
 		r = array('h')
 		initial_silence = []
+		frame_count = 0
 		while i < 10:
 			if self.paused: # paused: wait for resume button
 				self.pause_rec(stream)
 
 			snd_data = array('h', stream.read(self.CHUNK_SIZE))
-			if sys.byteorder == 'big':
-				snd_data.byteswap()
+			frame_count += 1
 			r.extend(snd_data)
 			initial_silence.append(max(snd_data))
 			i += 1
 
-		if int(max(initial_silence)) > 600:
+		if int(max(initial_silence)) > self.THRESHOLD:
 			self.THRESHOLD = int(max(initial_silence)) 
 		del(initial_silence)
 
-		silence = True
-		silence_count = 0
-	
-		speech = [False] * self.SPEECH_CHUNK
-		speech_count = 0
-
 		self.mic_ready = True
 
-		chunk_count = 0
-		while self.thread.recording and chunk_count < 150: # ~ 6.9 seconds
+		speech = init_window(False, self.WINDOW_SIZE)
+		while self.thread.recording:
 			if self.paused:
 				self.pause_rec(stream)
 
-			chunk_count += 1
 			snd_data = array('h', stream.read(self.CHUNK_SIZE))
-			if sys.byteorder == 'big':
-				snd_data.byteswap()
+			frame_count += 1
 			r.extend(snd_data)
 	
-			silence = (int(max(snd_data)) < self.THRESHOLD)
-	
-			if not silence and speech_count < self.SPEECH_CHUNK:
-				speech[speech_count] = True
-				speech_count += 1
-			elif silence and all(speech) == False:
-				speech = [False] * self.SPEECH_CHUNK
-				speech_count = 0
-			elif silence and all(speech):
-				silence_count += 1
-	
-			# end point detection
-			if silence_count > self.SILENCE_CHUNK:
+			voiced = (int(max(snd_data)) > self.THRESHOLD)
+			speech.append(voiced)
+			if all(speech):
 				break
+
+		silence = init_window(False, self.WINDOW_SIZE)
+		while self.thread.recording:
+			if self.paused:
+				self.pause_rec(stream)
+
+			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			frame_count += 1
+			r.extend(snd_data)
 	
-		del(speech, speech_count, silence_count)
+			unvoiced = (int(max(snd_data)) < self.THRESHOLD)
+			silence.append(unvoiced)
+			if all(silence):
+				break
+
+		del(speech, silence)
+	
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
 		stream.close()
 		p.terminate()
 	
 		self.mic_ready = False
-
-		return sample_width, r
+		return sample_width, r, frame_count-self.WINDOW_SIZE
 	
 	def record_to_file(self):
 		"""
 		Records from the microphone and outputs the resulting data to a file
 		"""
-		sample_width, data = self.record()
+		sample_width, data, frame_sil = self.record()
 		data = struct.pack('<' + ('h'*len(data)), *data)
 	
 		path = str(self.wshow.text().toUtf8())
@@ -788,6 +784,9 @@ class UFPARecord(QtGui.QMainWindow):
 			wf.setframerate(self.RATE)
 			wf.writeframes(data)
 			wf.close()
+
+			with open(unicode(path, 'utf-8') + '.fsil.txt', 'wb') as fs:
+				fs.write('fsil: %d\n' % (frame_sil+1))
 
 		del(sample_width, data)
 		self.thread.recording = False

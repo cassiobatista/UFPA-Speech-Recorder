@@ -63,7 +63,6 @@ class UFPARecord(QtGui.QMainWindow):
 	CHUNK_SIZE = 1024
 	CHANNELS = 1 # mono
 	WINDOW_SIZE = 6
-	SILENCE_CHUNK = 20
 
 	last_dir = info.ROOT_DIR_PATH
 
@@ -587,8 +586,6 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			#self.block_mic = False
-
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -734,12 +731,9 @@ class UFPARecord(QtGui.QMainWindow):
 			return deque([val], maxlen=maxl) 
 
 		p = pyaudio.PyAudio()
-		stream = p.open(input=True,
+		stream = p.open(input=True, 
 					format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
 					frames_per_buffer=self.CHUNK_SIZE)
-
-		started = None
-		stopped = None
 
 		# wait for GUI
 		if self.block_mic:
@@ -754,8 +748,6 @@ class UFPARecord(QtGui.QMainWindow):
 				self.pause_rec(stream)
 
 			snd_data = array('h', stream.read(self.CHUNK_SIZE))
-			#if sys.byteorder == 'big':
-			#	snd_data.byteswap()
 			r.extend(snd_data)
 			initial_silence.append(max(snd_data))
 			i += 1
@@ -768,7 +760,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 		speech = init_window(False, self.WINDOW_SIZE)
 		times  = init_window(None, self.WINDOW_SIZE)
-		detected = False
+		started = None
 		while self.thread.recording:
 			if self.paused:
 				self.pause_rec(stream)
@@ -780,26 +772,14 @@ class UFPARecord(QtGui.QMainWindow):
 			voiced = (int(max(snd_data)) > self.THRESHOLD)
 			speech.append(voiced)
 	
-			#if not silence and speech_count < self.SPEECH_CHUNK:
-			#	speech[speech_count] = True
-			#	times[speech_count]  = datetime.now().strftime('%X:%f\n')
-			#	speech_count += 1
-			#elif silence and all(speech) == False:
-			#	speech = [False] * self.SPEECH_CHUNK
-			#	times = [None] * self.SPEECH_CHUNK
-			#	speech_count = 0
-			#elif silence and all(speech):
-			#	achei = True
-			#	silence = True
-
-			if not detected and all(speech):
-				detected = True
+			if all(speech):
 				started = times.popleft()
 				break
 
 		silence = init_window(False, self.WINDOW_SIZE)
 		times   = init_window(None,  self.WINDOW_SIZE)
 		detected = False
+		stopped = None
 		while self.thread.recording:
 			if self.paused:
 				self.pause_rec(stream)
