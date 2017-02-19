@@ -396,6 +396,7 @@ class UFPAModule(QtGui.QMainWindow):
 		self.repeat_button.setStatusTip(u'Iniciar o módulo de repetição')
 		self.repeat_button.setToolTip(u'Repetição')
 		self.repeat_button.setIconSize(QtCore.QSize(210,220))
+		self.repeat_button.setEnabled(False)
 		self.repeat_button.clicked.connect(self.repeat_module)
 
 		hb_buttons = QtGui.QHBoxLayout()
