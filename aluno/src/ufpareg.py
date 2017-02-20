@@ -212,12 +212,64 @@ class UFPARegister(QtGui.QMainWindow):
 			self.age.setCurrentIndex(3)
 			self.grade.setCurrentIndex(2)
 
+	def open_reg(self):
+		filename = QtGui.QFileDialog.getOpenFileName(self,
+				u'Abrir arquivo de texto contendo as informações da criança', 
+				self.last_dir, u'(*.txt)')
+
+		filename = unicode(str(filename.toUtf8()), 'utf-8')
+
+		if filename is u'':
+			return 
+
+		with open(filename, 'r') as info_reg:
+			reg = info_reg.read().splitlines()
+
+		if reg.pop(0) != 'Dados do Aplicador':
+			QtGui.QMessageBox.critical(self,
+						u'Erro ao carregar dados do aplicador',
+						u'O arquivo de informações não está no formato ' + 
+						u'original do UFPA Speech Recorder!\n')
+			return
+
+		data = []
+		for i in xrange(2):
+			data.append(reg.pop(0))
+
+		reg.pop(0) # discard blank line
+		if reg.pop(0) != 'Dados do Aluno':
+			QtGui.QMessageBox.critical(self,
+						u'Erro ao carregar dados do aluno',
+						u'O arquivo de informações não está no formato ' + 
+						u'original do UFPA Speech Recorder!\n')
+			return
+
+		while len(reg):
+			data.append(reg.pop(0))
+
+		register = {}
+		while len(data):
+			field, value = data.pop(0).split(': ')
+			register[field] = value
+
+		for i in register:
+			print i, register[i]
+
+		self.last_dir = os.path.dirname(filename)
+
+
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'x.png')), u'&Sair', self)
 		act_exit.setShortcut('Ctrl+Q')
 		act_exit.setStatusTip(u'Fechar UFPA Speech Recorder')
 		act_exit.triggered.connect(self.quit_app)
+
+		act_open = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'open.png')), u'&Abrir', self)
+		act_open.setShortcut('Ctrl+O')
+		act_open.setStatusTip(u'Abre o registro de uma criança já cadastrada')
+		act_open.triggered.connect(self.open_reg)
 
 		act_about = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'about.png')), u'&Sobre', self)
@@ -244,6 +296,7 @@ class UFPARegister(QtGui.QMainWindow):
 	
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
+		toolbar.addAction(act_open)
 		toolbar.addAction(act_about)
 		#toolbar.addAction(act_cfg)
 		toolbar.addAction(act_zip)
