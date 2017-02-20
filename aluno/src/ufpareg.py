@@ -181,7 +181,7 @@ class UFPARegister(QtGui.QMainWindow):
 		self.start.setShortcut('Ctrl+Space')
 		self.start.setMinimumSize(150,50)
 		self.start.setDefault(True)
-		self.start.setAutoDefault(False)
+		self.start.setAutoDefault(True)
 		self.start.clicked.connect(self.register)
 
 		hb_start = QtGui.QHBoxLayout()
@@ -386,6 +386,7 @@ class UFPAModule(QtGui.QMainWindow):
 		self.read_button.setStatusTip(u'Iniciar o módulo de leitura')
 		self.read_button.setToolTip(u'Leitura')
 		self.read_button.setIconSize(QtCore.QSize(220,220))
+		self.read_button.setAutoDefault(True)
 		self.read_button.clicked.connect(self.read_module)
 
 		headphone = QtGui.QIcon(os.path.join(
@@ -397,6 +398,7 @@ class UFPAModule(QtGui.QMainWindow):
 		self.repeat_button.setToolTip(u'Repetição')
 		self.repeat_button.setIconSize(QtCore.QSize(210,220))
 		self.repeat_button.setEnabled(False)
+		self.repeat_button.setAutoDefault(True)
 		self.repeat_button.clicked.connect(self.repeat_module)
 
 		hb_buttons = QtGui.QHBoxLayout()
@@ -424,7 +426,7 @@ class UFPAModule(QtGui.QMainWindow):
 		self.statusBar()
 
 		menubar = self.menuBar() 
-		file_menu = menubar.addMenu('&File')
+		file_menu = menubar.addMenu(u'&Opções')
 		file_menu.addAction(act_exit)
 
 	def read_module(self):

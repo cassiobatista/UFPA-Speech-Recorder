@@ -89,11 +89,13 @@ class UFPARecord(QtGui.QMainWindow):
 
 
 	def init_main_screen(self):
+		self.txt_check = QtGui.QCheckBox(u'Carregar lista interna de palavras')
+		self.txt_check.setChecked(True)
+		self.txt_check.clicked.connect(self.clear_txt)
+
 		self.txt_file = QtGui.QLineEdit()
 		self.txt_file.setReadOnly(True)
-		if info.DEBUG:
-			self.txt_file.setText(os.path.join(
-						info.ROOT_DIR_PATH, 'exemplo.txt'))
+		self.txt_file.setEnabled(False)
 
 		self.txt_button = QtGui.QPushButton('Procurar')
 		self.txt_button.setMinimumWidth(150)
@@ -107,7 +109,7 @@ class UFPARecord(QtGui.QMainWindow):
 		hb_wlist.addSpacing(20)
 
 		vb_wlist = QtGui.QVBoxLayout()
-		vb_wlist.addSpacing(10)
+		vb_wlist.addWidget(self.txt_check)
 		vb_wlist.addLayout(hb_wlist)
 		# -------------
 
@@ -184,6 +186,7 @@ class UFPARecord(QtGui.QMainWindow):
 		self.prev_button.setIconSize(QtCore.QSize(65,65))
 		self.prev_button.setStatusTip(u'Gravar a palavra anterior')
 		self.prev_button.setToolTip(u'Palavra anterior')
+		self.prev_button.setShortcut(QtCore.Qt.Key_Left)
 		self.prev_button.setMinimumSize(90,90)
 		self.prev_button.setFlat(True)
 		self.prev_button.setStyleSheet('QPushButton:hover:!pressed' + 
@@ -197,7 +200,7 @@ class UFPARecord(QtGui.QMainWindow):
 		self.rec_button.setIconSize(QtCore.QSize(85,85))
 		self.rec_button.setStatusTip(u'Iniciar a gravação de áudio')
 		self.rec_button.setToolTip(u'Iniciar gravação')
-		self.rec_button.setShortcut('Ctrl+Space')
+		self.rec_button.setShortcut(QtCore.Qt.Key_Up)
 		self.rec_button.setMinimumSize(90,90)
 		self.rec_button.setFlat(True)
 		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
@@ -588,13 +591,17 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(act)
 
+	def clear_txt(self):
+		self.txt_file.clear()
+		self.txt_file.setEnabled(not self.txt_check.isChecked())
+		self.txt_button.setEnabled(not self.txt_check.isChecked())
+
 	def start_rec(self):
-		if self.txt_file.text() == '':
+		if self.txt_file.text() == '' and self.txt_check.isChecked() == False:
 			QtGui.QMessageBox.warning(self,
 						u'Problema ao carregar arquivo *.txt', 
 						u'É preciso carregar uma lista de palavras.\n' +
-						u'Por favor, preencha o campo corretamente.\n' +
-						u'Dica: utilize o botão "Procurar" :)\n')
+						u'Caso contrário, deixe a opção acima marcada.\n')
 			return
 
 		if not self.paused and not self.recording: # start recording
@@ -826,10 +833,22 @@ class LogThread(QtCore.QThread):
 	def wprev(self, idx):
 		self.i -= idx
 
+	def get_wlist(self):
+		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',
+				'GELO', 'REMO', 'CASA', 'MORRE', 'GALHO', 'MASSA', 'AQUI',\
+				'PASTO', 'CARTA', 'CINTO', 'TEMPO', 'LAVAM', 'ANÃO', 'PRATO',\
+				'CLARO', 'PEDAÇO', 'MÁGICO', 'DOMINÓ', 'vida', 'tubo', 'fale',\
+				'mina', 'juba', 'paga', 'cama', 'gelo', 'remo', 'casa', 'morre',\
+				'galho', 'massa', 'aqui', 'pasto', 'carta', 'cinto', 'tempo',\
+				'lavam', 'anão', 'prato', 'claro', 'pedaço', 'mágico', 'dominó' ]
+
 	def run(self):
-		with open(self.wlfile, 'r') as f:
-			self.wordlist = f.read().splitlines()
-			self.i = 0
+		self.i = 0
+		if self.wlfile == u'':
+			self.wordlist = self.get_wlist()
+		else:
+			with open(self.wlfile, 'r') as f:
+				self.wordlist = f.read().splitlines()
 
 		wcolors = ['_red', '_yellow', '_green']
 		while self.i < len(self.wordlist):

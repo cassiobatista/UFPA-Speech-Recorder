@@ -6,3 +6,6 @@ all:
 clean:
 	rm -f *.pyc
 	cd src && rm -f *.pyc
+
+distclean:
+	rm -rf Estado*

@@ -37,6 +37,7 @@ except ImportError:
 	pip.main(['install', 'pyaudio'])
 
 from ufpareg import UFPARegister
+import info
 
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
@@ -51,7 +52,7 @@ if __name__ == '__main__':
 	reg = UFPARegister()
 	reg.move(150,100) # try to centralize
 	reg.setMaximumSize(1500, 500) # define initial size
-	reg.setWindowTitle(u'UFPA Speech Recorder')
+	reg.setWindowTitle(info.TITLE)
 	reg.setWindowIcon(QtGui.QIcon(os.path.join('src', 'images', 'ufpa.png')))
 	reg.show()
 
