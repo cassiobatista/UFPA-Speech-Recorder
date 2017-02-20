@@ -294,12 +294,13 @@ class UFPARegister(QtGui.QMainWindow):
 
 			with open('1NFO.me.txt', 'w') as f:
 				f.write(u'Dados do Aplicador\n')
-				f.write(u'Nome: '   + applier + '\n')
-				f.write(u'Escola: ' + school  + '\n')
-				f.write(u'Idade: '  + age     + '\n')
-				f.write(u'Cidade: ' + city    + '\n')
-				f.write(u'Estado: ' + state   + '\n')
-				f.write(u'Gênero: ' + gender  + '\n')
+				f.write(u'Nome: '   + applier  + '\n')
+				f.write(u'ID: '     + self.uid.replace('_','') + '\n')
+				f.write(u'Escola: ' + school   + '\n')
+				f.write(u'Idade: '  + age      + '\n')
+				f.write(u'Cidade: ' + city     + '\n')
+				f.write(u'Estado: ' + state    + '\n')
+				f.write(u'Gênero: ' + gender   + '\n')
 
 			self.rec = UFPARecord(self, state, school, applier, self.uid)
 			self.rec.closed.connect(self.show)
