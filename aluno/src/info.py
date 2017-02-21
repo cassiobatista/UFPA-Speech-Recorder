@@ -18,8 +18,11 @@
 import sys
 import os
 import platform
+import logging
 
 DEBUG = False
+
+LOGFILE = u'ufpasr.log'
 
 SYS_OS = platform.system().lower()
 SYS_HOME_PATH = 'HOMEPATH' if SYS_OS == 'windows' else 'HOME'
@@ -50,5 +53,19 @@ INFO =  TITLE + '\n' \
 
 def img_path(img):
 	return os.path.join(SRC_DIR_PATH, 'images', img)
+
+# http://stackoverflow.com/questions/11232230/logging-to-two-files-with-different-settings
+def get_logger():
+	logging.disable(logging.NOTSET)
+	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+
+	handler = logging.FileHandler(LOGFILE)
+	handler.setFormatter(formatter)
+
+	logger = logging.getLogger('UFPA Logger')
+	logger.addHandler(handler)
+	logger.setLevel(logging.DEBUG)
+
+	return logger
 
 ### EOF ###

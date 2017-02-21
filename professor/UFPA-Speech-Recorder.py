@@ -21,23 +21,31 @@
 import os
 import sys
 sys.path.insert(0, 'src')
-#sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src'))
+
+import info
+from ufpareg import UFPARegister
+
+logger = info.get_logger()
 
 try:
 	from PyQt4 import QtCore, QtGui
 except ImportError:
-	print u'Erro: PyQt4 não instalado'
+	print u'Erro: PyQt4 não instalado.'
+	logger.error(u'PyQt4 não instalado')
 	sys.exit()
 
 try:
 	import pyaudio
 except ImportError:
 	print u'Aviso: PyAudio não instalado.'
-	import pip
-	pip.main(['install', 'pyaudio'])
+	try:
+		logger.warning(u'PyAudio não instalado. Tentando instalá-lo...')
+		import pip
+		pip.main(['install', 'pyaudio'])
+	except:
+		logger.error(u'PyAudio não pôde ser instalado. Problemas com o Pip.')
+		sys.exit()
 
-from ufpareg import UFPARegister
-import info
 
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
@@ -49,7 +57,9 @@ if __name__ == '__main__':
 			QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
 	app.installTranslator(translator)
 
-	reg = UFPARegister()
+	logger.debug(u'Iniciando interface de cadastro.')
+
+	reg = UFPARegister(logger)
 	reg.move(150,100) # try to centralize
 	reg.setMinimumSize(800, 350) # define initial size
 	reg.setMaximumSize(1000, 400) # define max size

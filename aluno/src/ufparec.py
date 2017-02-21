@@ -371,6 +371,13 @@ class UFPARecord(QtGui.QMainWindow):
 					QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 
 		if reply == QtGui.QMessageBox.Yes:
+			if self.thread is not None:
+				self.thread.i = 5000
+				self.recording = False
+				self.paused = False
+				self.thread.paused = False
+				self.thread.recording = False
+				self.block_mic = False
 			self.hide()
 			if not info.DEBUG:
 				self.parent.clear()

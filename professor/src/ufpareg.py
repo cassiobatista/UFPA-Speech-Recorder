@@ -35,8 +35,9 @@ class UFPARegister(QtGui.QMainWindow):
 	uid = datetime.now().strftime('_%Y%m%d-%H%M%S')
 	last_dir = info.ROOT_DIR_PATH
 
-	def __init__(self):
+	def __init__(self, logger):
 		super(UFPARegister, self).__init__()
+		self.logger = logger
 
 		def rec_demo():
 			p = pyaudio.PyAudio()
@@ -55,7 +56,6 @@ class UFPARegister(QtGui.QMainWindow):
 		self.init_main_screen()
 		self.init_menu()
 		threading.Thread(target=rec_demo).start()
-
 
 	def config(self):
 		QtGui.QMessageBox.information(self, u'Configurações', u'Coming soon.')
@@ -220,9 +220,10 @@ class UFPARegister(QtGui.QMainWindow):
 		if reg.pop(0) != 'Dados do Aplicador':
 			QtGui.QMessageBox.critical(self,
 						u'Erro ao carregar dados do aplicador',
-						u'O arquivo <b>%s</b> ' % filename + 
+						u'O arquivo <b>%s</b> ' % os.path.basename(filename) + 
 						u'não está de acordo com formato gerado pelo ' +
 						u' UFPA Speech Recorder!\n')
+			self.logger.error(u'Arquivo de dados incorreto.')
 			return
 
 		data = []
@@ -245,7 +246,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.gender_f.setChecked(True)
 
 		self.last_dir = os.path.dirname(filename)
-
+		self.logger.debug(u'Arquivo com dados já existentes carregado.')
 
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
@@ -298,9 +299,11 @@ class UFPARegister(QtGui.QMainWindow):
 					QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
 
 		if reply == QtGui.QMessageBox.Yes:
+			self.logger.debug(u'Fechado.')
 			QtGui.qApp.quit()
 		else:
 			event.ignore()
+		return
 
 	def quit_app(self):
 		reply = QtGui.QMessageBox.question(self, u'Fechar UFPA Speech Recorder', 
@@ -309,6 +312,7 @@ class UFPARegister(QtGui.QMainWindow):
 					QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
 
 		if reply == QtGui.QMessageBox.Yes:
+			self.logger.debug(u'Fechado.')
 			QtGui.qApp.quit()
 		else:
 			return
@@ -331,16 +335,20 @@ class UFPARegister(QtGui.QMainWindow):
 		else:
 			gender = u''
 
-		if  len(applier)     < 10 \
+		if  len(applier)     < 7 \
 			or len(school)   < 10 \
 			or len(city)     < 4  \
 			or state  == u'' \
 			or age    == u'' \
 			or gender == u'':
+
 			QtGui.QMessageBox.information(self, u'Erro nos dados de entrada', 
 					u'Alguma informação não foi devidamente preenchida.\n' + 
 					u'Por favor, verifique novamente o formulário.\n' + 
 					u'Se o problema persistir, entre em contato com o Nelson.')
+
+			self.logger.error(u'Inconsistência nos campos do formulário de cadastro.')
+
 			return
 		else:
 			# path: src/state
@@ -360,6 +368,8 @@ class UFPARegister(QtGui.QMainWindow):
 			os.mkdir(applier.split()[0].lower() + self.uid)
 			os.chdir(applier.split()[0].lower() + self.uid)
 
+			self.logger.debug(u'Escrevendo arquivo 1NFO.me')
+
 			with open('1NFO.me.txt', 'w') as f:
 				f.write(u'Dados do Aplicador\n')
 				f.write(u'Aplicador: '   + applier  + '\n')
@@ -369,6 +379,8 @@ class UFPARegister(QtGui.QMainWindow):
 				f.write(u'Cidade: '      + city     + '\n')
 				f.write(u'Estado: '      + state    + '\n')
 				f.write(u'Gênero: '      + gender   + '\n')
+
+			self.logger.debug(u'Iniciando interface de gravação.')
 
 			self.rec = UFPARecord(self, state, school, applier, self.uid)
 			self.rec.closed.connect(self.show)

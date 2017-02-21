@@ -35,8 +35,9 @@ class UFPARegister(QtGui.QMainWindow):
 	uid = datetime.now().strftime('_%Y%m%d-%H%M%S')
 	last_dir = info.ROOT_DIR_PATH
 
-	def __init__(self):
+	def __init__(self, logger):
 		super(UFPARegister, self).__init__()
+		self.logger = logger
 
 		def rec_demo():
 			p = pyaudio.PyAudio()
@@ -244,9 +245,10 @@ class UFPARegister(QtGui.QMainWindow):
 		if reg.pop(0) != 'Dados do Aplicador':
 			QtGui.QMessageBox.critical(self,
 						u'Erro ao carregar dados do aplicador',
-						u'O arquivo <b>%s</b> ' % filename + 
+						u'O arquivo <b>%s</b> ' % os.path.basename(filename) + 
 						u'não está de acordo com formato gerado pelo ' +
 						u' UFPA Speech Recorder!\n')
+			self.logger.error(u'Arquivo de dados incorreto.')
 			return
 
 		data = []
@@ -257,9 +259,10 @@ class UFPARegister(QtGui.QMainWindow):
 		if reg.pop(0) != 'Dados do Aluno':
 			QtGui.QMessageBox.critical(self,
 						u'Erro ao carregar dados do aluno',
-						u'O arquivo de <b>%s</b> ' % filename + 
+						u'O arquivo <b>%s</b> ' % os.path.basename(filename) + 
 						u'não está de acordo com formato gerado pelo ' + 
 						u'UFPA Speech Recorder!\n')
+			self.logger.error(u'Arquivo de dados incorreto.')
 			return
 
 		while len(reg):
@@ -284,6 +287,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.gender_f.setChecked(True)
 
 		self.last_dir = os.path.dirname(filename)
+		self.logger.debug(u'Arquivo com dados já existentes carregado.')
 
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -385,6 +389,7 @@ class UFPARegister(QtGui.QMainWindow):
 					u'Alguma informação não foi devidamente preenchida.\n' + 
 					u'Por favor, verifique novamente o formulário.\n' + 
 					u'Se o problema persistir, entre em contato com o Nelson.')
+			self.logger.error(u'Erro no preenchimento dos dados')
 			return
 		else:
 			# path: src/state
@@ -405,6 +410,7 @@ class UFPARegister(QtGui.QMainWindow):
 				os.mkdir(student.split()[0].lower() + self.uid)
 			os.chdir(student.split()[0].lower() + self.uid)
 
+			self.logger.debug(u'Criando arquivo 1NFO.me')
 			with open('1NFO.me.txt', 'w') as f:
 				f.write(u'Dados do Aplicador\n')
 				f.write(u'Aplicador: '  + applier  + '\n')
@@ -419,6 +425,8 @@ class UFPARegister(QtGui.QMainWindow):
 				f.write(u'Estado: ' + state    + '\n')
 				f.write(u'Gênero: ' + gender   + '\n')
 				f.write(u'Série: '  + grade    + '\n')
+
+			self.logger.debug(u'Iniciando o módulo de gravação.')
 
 			self.module = UFPAModule(self, state, school, student, self.uid)
 			self.module.closed.connect(self.show)
@@ -441,6 +449,9 @@ class UFPARegister(QtGui.QMainWindow):
 
 		self.gender_f.setChecked(False)
 		self.gender_m.setChecked(False)
+
+		self.logger = info.get_logger()
+		self.uid = datetime.now().strftime('_%Y%m%d-%H%M%S')
 
 
 class UFPAModule(QtGui.QMainWindow):

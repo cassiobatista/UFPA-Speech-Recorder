@@ -30,6 +30,7 @@ import shutil
 
 from PyQt4 import QtCore, QtGui
 from ufpatools import UFPAZip, UFPAUpload
+from datetime import datetime
 
 import logging
 import StringIO
@@ -294,6 +295,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 	def closeEvent(self, event):
 		if self.finished:
+			#self.logg.debug(u'Saindo.')
 			QtGui.qApp.quit()
 		else:
 			reply = QtGui.QMessageBox.question(self, u'Fechar ' + info.TITLE, 
@@ -303,6 +305,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 			if reply == QtGui.QMessageBox.Yes:
 				if self.thread is not None:
+					#self.logg.debug(u'Matando a thread.')
 					self.thread.i = 5000
 					self.recording = False
 					self.thread.paused = False
@@ -310,12 +313,14 @@ class UFPARecord(QtGui.QMainWindow):
 					self.block_mic = False
 					self.paused = False
 
+				#self.logg.debug(u'Saindo.')
 				QtGui.qApp.quit()
 			else:
 				event.ignore()
 
 	def quit_app(self):
 		if self.finished:
+			#self.logg.debug(u'Saindo.')
 			QtGui.qApp.quit()
 		else:
 			reply = QtGui.QMessageBox.question(self, u'Fechar ' + info.TITLE, 
@@ -325,6 +330,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 			if reply == QtGui.QMessageBox.Yes:
 				if self.thread is not None:
+					#self.logg.debug(u'Matando a thread.')
 					self.thread.i = 5000
 					self.recording = False
 					self.paused = False
@@ -332,6 +338,7 @@ class UFPARecord(QtGui.QMainWindow):
 					self.thread.recording = False
 					self.block_mic = False
 
+				#self.logg.debug(u'Saindo.')
 				QtGui.qApp.quit()
 			else:
 				return
@@ -346,6 +353,7 @@ class UFPARecord(QtGui.QMainWindow):
 					QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 
 		if reply == QtGui.QMessageBox.Yes:
+			#self.logg.debug(u'Novo registro.')
 			self.hide()
 			if not info.DEBUG:
 				self.parent.clear()
@@ -361,6 +369,7 @@ class UFPARecord(QtGui.QMainWindow):
 		filename = unicode(str(filename.toUtf8()), 'utf-8')
 
 		if filename is not u'':
+			#self.logg.debug(u'Lista de palavras %s carregada.' % os.path.basename(filename))
 			self.txt_file.setText(filename)
 			self.last_dir = os.path.dirname(filename)
 
@@ -393,6 +402,7 @@ class UFPARecord(QtGui.QMainWindow):
 		elif act == '_yellow':
 			if info.SYS_OS == 'windows':
 				threading.Thread(target=self.record_to_file).start()
+				#self.logg.debug(u'Thread de gravação iniciada.')
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
@@ -500,6 +510,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(u'Gravação concluída com sucesso. Obrigado!')
 
+			#self.logg.debug(u'Gravação concluída.')
+
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'rec.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
@@ -548,6 +560,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(u'Algum erro inesperado ocorreu.')
 
+			#self.logg.error(u'Erro desconhecido e inesperado.')
+
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'rec.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
@@ -558,6 +572,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.block_mic = False
 			if info.SYS_OS == 'linux':
 				threading.Thread(target=self.record_to_file).start()
+				#self.logg.error(u'Thread de gravação iniciada.')
 
 			# wait for mic
 			while not self.mic_ready:
@@ -604,6 +619,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 	def start_rec(self):
 		if self.txt_file.text() == '' and self.txt_check.isChecked() == False:
+			#self.logg.error(u'Lista de palavras externa não especificada.')
 			QtGui.QMessageBox.warning(self,
 						u'Problema ao carregar arquivo *.txt', 
 						u'É preciso carregar uma lista de palavras.\n' +
@@ -649,6 +665,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
 
+			#self.logg.debug(u'Gravação iniciada.')
+
 			self.finished = False
 		elif not self.paused and self.recording: # pause recording
 			self.thread.paused = True
@@ -676,6 +694,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
 
+			#self.logg.debug(u'Gravação pausada.')
+
 			time.sleep(.25)
 		elif self.paused and self.recording: # resume recording
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
@@ -693,6 +713,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.paused = False
 			self.thread.paused = False
 
+			#self.logg.debug(u'Gravação retomada.')
+
 	def wprev(self):
 		self.thread.wprev(1)
 
@@ -701,6 +723,8 @@ class UFPARecord(QtGui.QMainWindow):
 
 		self.paused = False
 		self.thread.paused = False
+
+		#self.logg.debug(u'Palavra anterior.')
 
 	def pause_rec(self, stream):
 		stream.stop_stream()
@@ -721,6 +745,8 @@ class UFPARecord(QtGui.QMainWindow):
 		stream = p.open(input=True, 
 					format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
 					frames_per_buffer=self.FRAMES_PER_BUFFER)
+
+		##self.logg.debug(u'Stream de gravação instanciada.')
 
 		# wait for GUI
 		if self.block_mic:
@@ -744,6 +770,8 @@ class UFPARecord(QtGui.QMainWindow):
 		if int(max(initial_silence)) > self.THRESHOLD:
 			self.THRESHOLD = int(max(initial_silence)) 
 		del(initial_silence)
+
+		#self.logg.debug(u'Threshold de fala/silêncio calculado: %d.' % self.THRESHOLD)
 
 		self.mic_ready = True
 
@@ -776,6 +804,7 @@ class UFPARecord(QtGui.QMainWindow):
 				break
 
 		del(speech, silence)
+		#self.logg.debug(u'Rotina de detecção de end-point finalizada')
 	
 		sil_sample = (frame_count+1-self.WINDOW_SIZE)*self.FRAMES_PER_BUFFER
 
@@ -802,6 +831,8 @@ class UFPARecord(QtGui.QMainWindow):
 			wf.setframerate(self.RATE)
 			wf.writeframes(data)
 			wf.close()
+
+			#self.logg.debug(u'Escrita do arquivo .wav finalizada')
 
 			with open(unicode(path, 'utf-8') + '.ss.txt', 'wb') as fs:
 				fs.write('%d' % sil_sample)
