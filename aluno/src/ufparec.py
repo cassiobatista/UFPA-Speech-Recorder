@@ -783,6 +783,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 			self.paused = False
 			self.thread.paused = False
+			self.thread.recording = False
 
 			self.text = None
 
