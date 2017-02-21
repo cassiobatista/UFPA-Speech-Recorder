@@ -622,10 +622,10 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(act)
 
-			self.hide_gui()
-
 			with open(act + '.time.txt', 'w') as f:
 				f.write(datetime.now().strftime('Exibição: %X:%f\n'))
+
+			self.hide_gui()
 
 	def hide_gui(self):
 		void_icon = QtGui.QIcon()
