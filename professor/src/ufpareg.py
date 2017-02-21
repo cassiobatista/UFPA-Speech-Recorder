@@ -186,12 +186,61 @@ class UFPARegister(QtGui.QMainWindow):
 			self.gender_m.setChecked(True)
 			self.age.setCurrentIndex(1)
 
+	def open_reg(self):
+		filename = QtGui.QFileDialog.getOpenFileName(self,
+				u'Abrir arquivo de texto contendo as informações do aplicador', 
+				self.last_dir, u'(*.txt)')
+
+		filename = unicode(str(filename.toUtf8()), 'utf-8')
+
+		if filename is u'':
+			return 
+
+		with open(filename, 'r') as f:
+			reg = f.read().splitlines()
+
+		if reg.pop(0) != 'Dados do Aplicador':
+			QtGui.QMessageBox.critical(self,
+						u'Erro ao carregar dados do aplicador',
+						u'O arquivo <b>%s</b> ' % filename + 
+						u'não está de acordo com formato gerado pelo ' +
+						u' UFPA Speech Recorder!\n')
+			return
+
+		data = []
+		while len(reg):
+			data.append(reg.pop(0))
+
+		register = {}
+		while len(data):
+			field, value = data.pop(0).split(': ')
+			register[field] = unicode(value, 'utf-8')
+
+		self.applier.setText(register['Aplicador'])
+		self.school.setText(register['Escola'])
+		self.city.setText(register['Cidade'])
+		self.state.setCurrentIndex(self.state.findText(register['Estado']))
+		self.age.setCurrentIndex(self.age.findText(register['Idade']))
+		if register['Gênero'] == u'Masculino':
+			self.gender_m.setChecked(True)
+		elif register['Gênero'] == u'Feminino':
+			self.gender_f.setChecked(True)
+
+		self.last_dir = os.path.dirname(filename)
+
+
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
 					'images', 'x.png')), u'&Sair', self)
 		act_exit.setShortcut('Ctrl+Q')
 		act_exit.setStatusTip(u'Fechar UFPA Speech Recorder')
 		act_exit.triggered.connect(self.quit_app)
+
+		act_open = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'open.png')), u'&Abrir', self)
+		act_open.setShortcut('Ctrl+O')
+		act_open.setStatusTip(u'Carregar o registro de uma criança já cadastrada')
+		act_open.triggered.connect(self.open_reg)
 
 		act_about = QtGui.QAction(QtGui.QIcon(os.path.join(info.SRC_DIR_PATH,
 					'images', 'about.png')), u'&Sobre', self)
@@ -218,6 +267,7 @@ class UFPARegister(QtGui.QMainWindow):
 	
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
+		toolbar.addAction(act_open)
 		toolbar.addAction(act_about)
 		#toolbar.addAction(act_cfg)
 		toolbar.addAction(act_zip)
@@ -294,13 +344,13 @@ class UFPARegister(QtGui.QMainWindow):
 
 			with open('1NFO.me.txt', 'w') as f:
 				f.write(u'Dados do Aplicador\n')
-				f.write(u'Nome: '   + applier  + '\n')
-				f.write(u'ID: '     + self.uid.replace('_','') + '\n')
-				f.write(u'Escola: ' + school   + '\n')
-				f.write(u'Idade: '  + age      + '\n')
-				f.write(u'Cidade: ' + city     + '\n')
-				f.write(u'Estado: ' + state    + '\n')
-				f.write(u'Gênero: ' + gender   + '\n')
+				f.write(u'Aplicador: '   + applier  + '\n')
+				f.write(u'ID: '          + self.uid.replace('_','') + '\n')
+				f.write(u'Escola: '      + school   + '\n')
+				f.write(u'Idade: '       + age      + '\n')
+				f.write(u'Cidade: '      + city     + '\n')
+				f.write(u'Estado: '      + state    + '\n')
+				f.write(u'Gênero: '      + gender   + '\n')
 
 			self.rec = UFPARecord(self, state, school, applier, self.uid)
 			self.rec.closed.connect(self.show)

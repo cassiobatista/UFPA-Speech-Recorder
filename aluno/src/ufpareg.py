@@ -205,7 +205,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.applier.setText(u'Nelson Cruz Sampaio Neto')
 			self.group.setCurrentIndex(1)
 			self.school.setText(u'Universidade Federal do Pará')
-			self.student.setText(u'Cássio Trindade Batista')
+			self.student.setText(u'Cassio Trindade Batista')
 			self.city.setText(u'Belém')
 			self.state.setCurrentIndex(14)
 			self.gender_m.setChecked(True)
@@ -228,8 +228,9 @@ class UFPARegister(QtGui.QMainWindow):
 		if reg.pop(0) != 'Dados do Aplicador':
 			QtGui.QMessageBox.critical(self,
 						u'Erro ao carregar dados do aplicador',
-						u'O arquivo de informações não está no formato ' + 
-						u'original do UFPA Speech Recorder!\n')
+						u'O arquivo <b>%s</b> ' % filename + 
+						u'não está de acordo com formato gerado pelo ' +
+						u' UFPA Speech Recorder!\n')
 			return
 
 		data = []
@@ -240,8 +241,9 @@ class UFPARegister(QtGui.QMainWindow):
 		if reg.pop(0) != 'Dados do Aluno':
 			QtGui.QMessageBox.critical(self,
 						u'Erro ao carregar dados do aluno',
-						u'O arquivo de informações não está no formato ' + 
-						u'original do UFPA Speech Recorder!\n')
+						u'O arquivo de <b>%s</b> ' % filename + 
+						u'não está de acordo com formato gerado pelo ' + 
+						u'UFPA Speech Recorder!\n')
 			return
 
 		while len(reg):
@@ -250,13 +252,22 @@ class UFPARegister(QtGui.QMainWindow):
 		register = {}
 		while len(data):
 			field, value = data.pop(0).split(': ')
-			register[field] = value
+			register[field] = unicode(value, 'utf-8')
 
-		for i in register:
-			print i, register[i]
+		self.applier.setText(register['Aplicador'])
+		self.group.setCurrentIndex(self.group.findText(register['Grupo']))
+		self.school.setText(register['Escola'])
+		self.student.setText(register['Aluno'])
+		self.city.setText(register['Cidade'])
+		self.state.setCurrentIndex(self.state.findText(register['Estado']))
+		self.age.setCurrentIndex(self.age.findText(register['Idade']))
+		self.grade.setCurrentIndex(self.grade.findText(register['Série']))
+		if register['Gênero'] == u'Masculino':
+			self.gender_m.setChecked(True)
+		elif register['Gênero'] == u'Feminino':
+			self.gender_f.setChecked(True)
 
 		self.last_dir = os.path.dirname(filename)
-
 
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -268,7 +279,7 @@ class UFPARegister(QtGui.QMainWindow):
 		act_open = QtGui.QAction(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'open.png')), u'&Abrir', self)
 		act_open.setShortcut('Ctrl+O')
-		act_open.setStatusTip(u'Abre o registro de uma criança já cadastrada')
+		act_open.setStatusTip(u'Carregar o registro de uma criança já cadastrada')
 		act_open.triggered.connect(self.open_reg)
 
 		act_about = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -380,11 +391,11 @@ class UFPARegister(QtGui.QMainWindow):
 
 			with open('1NFO.me.txt', 'w') as f:
 				f.write(u'Dados do Aplicador\n')
-				f.write(u'Nome: '  + applier  + '\n')
-				f.write(u'Grupo: ' + group    + '\n')
+				f.write(u'Aplicador: '  + applier  + '\n')
+				f.write(u'Grupo: '      + group    + '\n')
 				f.write('\n')
 				f.write(u'Dados do Aluno\n')
-				f.write(u'Nome: '   + student  + '\n')
+				f.write(u'Aluno: '  + student  + '\n')
 				f.write(u'ID: '     + self.uid.replace('_','') + '\n')
 				f.write(u'Escola: ' + school   + '\n')
 				f.write(u'Idade: '  + age      + '\n')
