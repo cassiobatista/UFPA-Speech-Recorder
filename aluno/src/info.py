@@ -29,7 +29,9 @@ SRC_DIR_PATH  = unicode(str(os.path.abspath(os.path.dirname(
 ROOT_DIR_PATH = unicode(str(os.path.abspath(os.path.join(
 			SRC_DIR_PATH, os.pardir))), 'utf-8')
 
-TITLE = u'UFPA Speech Recorder'
+MODULE = u'Módulo do Aluno'
+
+TITLE = u'UFPA Speech Recorder' + ' - ' + MODULE
 
 INFO =  TITLE + '\n' \
 		u'\n' + \
@@ -45,4 +47,8 @@ INFO =  TITLE + '\n' \
 		u'Grupo FalaBrasil\n' + \
 		u'Instituto de Ciências Exatas e Naturais\n' + \
 		u'Universidade Federal do Pará\n'
+
+def img_path(img):
+	return os.path.join(SRC_DIR_PATH, 'images', img)
+
 ### EOF ###

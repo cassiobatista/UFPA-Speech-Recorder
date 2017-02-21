@@ -25,6 +25,7 @@
 import sys
 import os
 import time
+import random
 import shutil
 
 from PyQt4 import QtCore, QtGui
@@ -87,28 +88,37 @@ class UFPARecord(QtGui.QMainWindow):
 
 		self.init_main_screen()
 		self.init_menu()
-		self.statusBar()
 
 	def init_main_screen(self):
+		self.txt_check = QtGui.QCheckBox(u'Carregar lista interna de palavras')
+		self.txt_check.setChecked(True)
+		self.txt_check.clicked.connect(self.clear_txt)
+
+		self.txt_label = QtGui.QLabel(u'Lista de Palavras')
+		self.txt_label.setEnabled(False)
+
 		self.txt_file = QtGui.QLineEdit()
 		self.txt_file.setReadOnly(True)
-		if info.DEBUG:
-			self.txt_file.setText(os.path.join(
-						info.ROOT_DIR_PATH, 'exemplo.txt'))
+		self.txt_file.setEnabled(False)
 
 		self.txt_button = QtGui.QPushButton('Procurar')
 		self.txt_button.setMinimumWidth(150)
 		self.txt_button.setStatusTip(u'Procurar a lista de palavras')
+		self.txt_button.setEnabled(False)
 		self.txt_button.clicked.connect(self.open_wlist_file)
 
 		hb_wlist = QtGui.QHBoxLayout()
-		hb_wlist.addWidget(QtGui.QLabel('Lista de palavras'))
+		hb_wlist.addWidget(self.txt_label)
 		hb_wlist.addWidget(self.txt_file)
 		hb_wlist.addWidget(self.txt_button)
 		hb_wlist.addSpacing(20)
 
+		vb_wlist = QtGui.QVBoxLayout()
+		vb_wlist.addWidget(self.txt_check)
+		vb_wlist.addLayout(hb_wlist)
+
 		gb_wlist = QtGui.QGroupBox()
-		gb_wlist.setLayout(hb_wlist)
+		gb_wlist.setLayout(vb_wlist)
 		# -------------
 
 		self.wshow = QtGui.QLabel()
@@ -190,6 +200,7 @@ class UFPARecord(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.prev_button.setEnabled(False)
 		self.prev_button.clicked.connect(self.wprev)
+		self.prev_button.setShortcut(QtCore.Qt.Key_Left)
 
 		self.rec_button = QtGui.QPushButton()
 		self.rec_button.setIcon(QtGui.QIcon(os.path.join(
@@ -197,12 +208,12 @@ class UFPARecord(QtGui.QMainWindow):
 		self.rec_button.setIconSize(QtCore.QSize(85,85))
 		self.rec_button.setStatusTip(u'Iniciar a gravação de áudio')
 		self.rec_button.setToolTip(u'Iniciar gravação')
-		self.rec_button.setShortcut('Ctrl+Space')
 		self.rec_button.setMinimumSize(90,90)
 		self.rec_button.setFlat(True)
 		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.rec_button.clicked.connect(self.start_rec)
+		self.rec_button.setShortcut(QtCore.Qt.Key_Up)
 
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
@@ -216,6 +227,7 @@ class UFPARecord(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.next_button.setEnabled(False)
 		self.next_button.clicked.connect(self.wnext)
+		self.next_button.setShortcut(QtCore.Qt.Key_Right)
 
 		hb_rec = QtGui.QHBoxLayout()
 		hb_rec.addStretch()
@@ -239,48 +251,55 @@ class UFPARecord(QtGui.QMainWindow):
 		self.setCentralWidget(wg_central)
 
 	def init_menu(self):
-		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'x.png')), '&Sair', self)
-		act_exit.setShortcut('Ctrl+Q')
-		act_exit.setStatusTip(u'Fechar UFPA Speech Recorder')
-		act_exit.triggered.connect(self.quit_app)
+		self.act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'x.png')), u'', self)
+		self.act_exit.setShortcut('Ctrl+Q')
+		self.act_exit.setStatusTip(u'Fechar UFPA Speech Recorder')
+		self.act_exit.setToolTip(u'Sair')
+		self.act_exit.triggered.connect(self.quit_app)
 
-		act_about = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'about.png')), '&Sobre', self)
-		act_about.setShortcut('Ctrl+I')
-		act_about.setStatusTip('Sobre o app')
-		act_about.triggered.connect(self.about)
+		self.act_about = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'about.png')), u'', self)
+		self.act_about.setShortcut('Ctrl+I')
+		self.act_about.setStatusTip(u'Sobre o app')
+		self.act_about.setToolTip(u'Sobre')
+		self.act_about.triggered.connect(self.about)
 
-		act_cfg = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'settings.png')), u'&Configurações', self)
-		act_cfg.setStatusTip(u'Configurar UFPA Speech Recorder')
-		#act_cfg.triggered.connect(self.config)
+		self.act_cfg = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'settings.png')), u'', self)
+		self.act_cfg.setStatusTip(u'Configurar UFPA Speech Recorder')
+		self.act_cfg.setToolTip(u'Configurações')
+		#self.act_cfg.triggered.connect(self.config)
 
-		act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'zip.png')), u'&Compactar', self)
-		act_zip.setStatusTip(u'Compactar pasta de áudios em um arquivo .zip')
-		act_zip.triggered.connect(self.compress)
-		act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'&Upload', self)
+		self.act_zip = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'zip.png')), u'', self)
+		self.act_zip.setStatusTip(u'Compactar pasta de áudios em um arquivo .zip')
+		self.act_zip.setToolTip(u'Compactar')
+		self.act_zip.triggered.connect(self.compress)
 
-		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
-		#act_cloud.triggered.connect(self.config)
+		self.act_cloud = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'cloud.png')), u'', self)
+		self.act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
+		self.act_cloud.setToolTip(u'Upload')
+		#self.act_cloud.triggered.connect(self.config)
 
-		act_add_new = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'add.png')), '&Novo Registro', self)
-		act_add_new.setShortcut('Ctrl+N')
-		act_add_new.setStatusTip(u'Adicionar novo registro')
-		act_add_new.triggered.connect(self.new_reg)
+		self.act_add_new = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'add.png')), u'', self)
+		self.act_add_new.setShortcut('Ctrl+N')
+		self.act_add_new.setStatusTip(u'Adicionar novo registro')
+		self.act_add_new.setToolTip(u'Novo registro')
+		self.act_add_new.triggered.connect(self.new_reg)
 
 		self.statusBar()
+		
+		self.tb = QtGui.QToolBar()
+		self.tb.addAction(self.act_exit)
+		self.tb.addAction(self.act_about)
+		self.tb.addAction(self.act_zip)
+		self.tb.addAction(self.act_add_new)
+		self.tb.setStyleSheet('QToolBar:focus {border:none; outline:none;}')
 	
-		toolbar = self.addToolBar('Standard')
-		toolbar.addAction(act_exit)
-		toolbar.addAction(act_about)
-		#toolbar.addAction(act_cfg)
-		toolbar.addAction(act_zip)
-		#toolbar.addAction(act_cloud)
-		toolbar.addAction(act_add_new)
+		toolbar = self.addToolBar(self.tb)
 
 	def remove_data(self):
 		state_path = os.path.join(info.ROOT_DIR_PATH, u'Estado do ' + self.state)
@@ -469,6 +488,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.recording = False
 			self.paused = False
 
+			self.restore_gui()
+
 			smiley = QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images','smiley.png'))
 
@@ -601,21 +622,97 @@ class UFPARecord(QtGui.QMainWindow):
 			self.wshow.setFont(font)
 			self.wshow.setText(act)
 
+			self.hide_gui()
+
 			with open(act + '.time.txt', 'w') as f:
 				f.write(datetime.now().strftime('Exibição: %X:%f\n'))
 
+	def hide_gui(self):
+		void_icon = QtGui.QIcon()
+
+		color = QtGui.QPalette(self.bred.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.bred.setIcon(void_icon)
+		self.bred.setAutoFillBackground(True)
+		self.bred.setPalette(color)
+
+		color = QtGui.QPalette(self.byellow.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.green)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.byellow.setIcon(void_icon)
+		self.byellow.setAutoFillBackground(True)
+		self.byellow.setPalette(color)
+
+		color = QtGui.QPalette(self.bgreen.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.bgreen.setIcon(void_icon)
+		self.bgreen.setAutoFillBackground(True)
+		self.bgreen.setPalette(color)
+
+		color = QtGui.QPalette(self.rec_button.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.rec_button.setIcon(void_icon)
+		self.rec_button.setPalette(color)
+
+		color = QtGui.QPalette(self.prev_button.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.prev_button.setIcon(void_icon)
+		self.prev_button.setPalette(color)
+
+		color = QtGui.QPalette(self.next_button.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.next_button.setIcon(void_icon)
+		self.next_button.setPalette(color)
+
+		self.tb.setMaximumHeight(0) # gambiarras
+
+		self.rec_button.setStyleSheet('QPushButton:focus {border:none; outline:none;}')
+
+		self.txt_label.hide()
+		self.txt_file.hide()
+		self.txt_button.hide()
+		self.txt_check.hide()
+
+		self.statusBar().hide()
+
+	def restore_gui(self):
+		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
+					'{background-color: black; border: 3px solid lightgray;}')
+		self.prev_button.setIcon(QtGui.QIcon(info.img_path('previous.png')))
+		self.next_button.setIcon(QtGui.QIcon(info.img_path('next.png')))
+
+		self.tb.setMaximumHeight(45)
+
+		self.txt_label.show()
+		self.txt_file.show()
+		self.txt_button.show()
+		self.txt_check.show()
+
+		self.statusBar().show()
+
+	def clear_txt(self):
+		self.txt_file.clear()
+		self.txt_label.setEnabled(not self.txt_check.isChecked())
+		self.txt_file.setEnabled(not self.txt_check.isChecked())
+		self.txt_button.setEnabled(not self.txt_check.isChecked())
+
 	def start_rec(self):
-		if self.txt_file.text() == '':
+		if self.txt_file.text() == '' and self.txt_check.isChecked() == False:
 			QtGui.QMessageBox.warning(self,
 						u'Problema ao carregar arquivo *.txt', 
 						u'É preciso carregar uma lista de palavras.\n' +
-						u'Por favor, preencha o campo corretamente.\n' +
-						u'Dica: utilize o botão "Procurar" :)\n')
+						u'Caso contrário, deixe a opção acima marcada.\n')
 			return
 
 		if not self.paused and not self.recording: # start recording
 			self.recording = True
 			self.txt_button.setEnabled(False)
+			self.txt_check.setEnabled(False)
 
 			# create logger
 			self.logger = logging.getLogger()
@@ -636,7 +733,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.thread = LogThread(unicode(self.txt_file.text(),'utf-8'), self) 
 			self.thread.start()
 
-			self.wshow.setFrameStyle(54) # QTextEdit.frameStyle() returned 54
+			#self.wshow.setFrameStyle(54) # QTextEdit.frameStyle() returned 54
 
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'pause.png')))
@@ -648,6 +745,8 @@ class UFPARecord(QtGui.QMainWindow):
 			self.bred.setIcon(QtGui.QIcon())
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
+
+			self.hide_gui()
 
 			self.finished = False
 		elif not self.paused and self.recording: # pause recording
@@ -666,9 +765,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setToolTip(u'Retomar gravação')
 			self.rec_button.update()
 
-			self.bred.setIcon(QtGui.QIcon())
-			self.byellow.setIcon(QtGui.QIcon())
-			self.bgreen.setIcon(QtGui.QIcon())
+			self.restore_gui()
 
 			while self.mic_ready:
 				pass
@@ -682,9 +779,7 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setToolTip(u'Pausar gravação')
 			self.rec_button.update()
 
-			self.bred.setIcon(QtGui.QIcon())
-			self.byellow.setIcon(QtGui.QIcon())
-			self.bgreen.setIcon(QtGui.QIcon())
+			self.hide_gui()
 
 			self.paused = False
 			self.thread.paused = False
@@ -809,8 +904,8 @@ class UFPARecord(QtGui.QMainWindow):
 				else:
 					f.write(u'Fim da fala: -- \n')
 
-		with open(self.text + '.time.txt', 'a') as f:
-			f.write(click_time.strftime(u'Ocultação: %X.%f\n'))
+			with open(self.text + '.time.txt', 'a') as f:
+				f.write(click_time.strftime(u'Ocultação: %X.%f\n'))
 
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
@@ -876,10 +971,24 @@ class LogThread(QtCore.QThread):
 	def wprev(self):
 		self.i -= 1
 
+	def get_wlist(self):
+		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',
+				'GELO', 'REMO', 'CASA', 'MORRE', 'GALHO', 'MASSA', 'AQUI',\
+				'PASTO', 'CARTA', 'CINTO', 'TEMPO', 'LAVAM', 'ANÃO', 'PRATO',\
+				'CLARO', 'PEDAÇO', 'MÁGICO', 'DOMINÓ', 'vida', 'tubo', 'fale',\
+				'mina', 'juba', 'paga', 'cama', 'gelo', 'remo', 'casa', 'morre',\
+				'galho', 'massa', 'aqui', 'pasto', 'carta', 'cinto', 'tempo',\
+				'lavam', 'anão', 'prato', 'claro', 'pedaço', 'mágico', 'dominó' ]
+
 	def run(self):
-		with open(self.wlfile, 'r') as f:
-			self.wordlist = f.read().splitlines()
-			self.i = 0
+		self.i = 0
+		if self.wlfile == u'':
+			self.wordlist = self.get_wlist()
+		else:
+			with open(self.wlfile, 'r') as f:
+				self.wordlist = f.read().splitlines()
+
+		random.shuffle(self.wordlist)
 
 		wcolors = ['_red', '_yellow', '_green']
 		while self.i < len(self.wordlist):
