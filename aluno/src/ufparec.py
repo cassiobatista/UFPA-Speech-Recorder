@@ -416,9 +416,9 @@ class UFPARecord(QtGui.QMainWindow):
 			self.byellow.update()
 			self.bgreen.update()
 		elif act == '_yellow':
-			if info.SYS_OS == 'windows':
-				self.rec2f = threading.Thread(target=self.record_to_file)
-				self.rec2f.start()
+			#if info.SYS_OS == 'windows':
+			#	self.rec2f = threading.Thread(target=self.record_to_file)
+			#	self.rec2f.start()
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
@@ -584,9 +584,9 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.update()
 		else:
 			self.block_mic = False
-			if info.SYS_OS == 'linux':
-				self.rec2f = threading.Thread(target=self.record_to_file)
-				self.rec2f.start()
+			#if info.SYS_OS == 'linux':
+			self.rec2f = threading.Thread(target=self.record_to_file)
+			self.rec2f.start()
 
 			# wait for mic
 			while not self.mic_ready:
