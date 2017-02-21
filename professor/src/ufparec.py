@@ -58,7 +58,7 @@ class UFPARecord(QtGui.QMainWindow):
 	THRESHOLD = 600
 	FORMAT = pyaudio.paInt16 # bits per sample (short)
 	RATE = 22050 # Hz
-	CHUNK_SIZE = 1024
+	FRAMES_PER_BUFFER = 1024
 	CHANNELS = 1 # mono
 	WINDOW_SIZE = 6
 
@@ -711,7 +711,7 @@ class UFPARecord(QtGui.QMainWindow):
 		p = pyaudio.PyAudio()
 		stream = p.open(input=True, 
 					format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
-					frames_per_buffer=self.CHUNK_SIZE)
+					frames_per_buffer=self.FRAMES_PER_BUFFER)
 
 		# wait for GUI
 		if self.block_mic:
@@ -726,7 +726,7 @@ class UFPARecord(QtGui.QMainWindow):
 			if self.paused: # paused: wait for resume button
 				self.pause_rec(stream)
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			snd_data = array('h', stream.read(self.FRAMES_PER_BUFFER))
 			frame_count += 1
 			r.extend(snd_data)
 			initial_silence.append(max(snd_data))
@@ -743,7 +743,7 @@ class UFPARecord(QtGui.QMainWindow):
 			if self.paused:
 				self.pause_rec(stream)
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			snd_data = array('h', stream.read(self.FRAMES_PER_BUFFER))
 			frame_count += 1
 			r.extend(snd_data)
 	
@@ -757,7 +757,7 @@ class UFPARecord(QtGui.QMainWindow):
 			if self.paused:
 				self.pause_rec(stream)
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			snd_data = array('h', stream.read(self.FRAMES_PER_BUFFER))
 			frame_count += 1
 			r.extend(snd_data)
 	
@@ -768,19 +768,21 @@ class UFPARecord(QtGui.QMainWindow):
 
 		del(speech, silence)
 	
+		sil_sample = (frame_count+1-self.WINDOW_SIZE)*self.FRAMES_PER_BUFFER
+
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
 		stream.close()
 		p.terminate()
 	
 		self.mic_ready = False
-		return sample_width, r, frame_count-self.WINDOW_SIZE
+		return sample_width, r, sil_sample
 	
 	def record_to_file(self):
 		"""
 		Records from the microphone and outputs the resulting data to a file
 		"""
-		sample_width, data, frame_sil = self.record()
+		sample_width, data, sil_sample = self.record()
 		data = struct.pack('<' + ('h'*len(data)), *data)
 	
 		path = str(self.wshow.text().toUtf8())
@@ -792,8 +794,8 @@ class UFPARecord(QtGui.QMainWindow):
 			wf.writeframes(data)
 			wf.close()
 
-			with open(unicode(path, 'utf-8') + '.fsil.txt', 'wb') as fs:
-				fs.write('fsil: %d\n' % (frame_sil+1))
+			with open(unicode(path, 'utf-8') + '.ss.txt', 'wb') as fs:
+				fs.write('%d' % sil_sample)
 
 		del(sample_width, data)
 		self.thread.recording = False
