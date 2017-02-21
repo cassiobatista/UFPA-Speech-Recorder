@@ -94,6 +94,9 @@ class UFPARecord(QtGui.QMainWindow):
 		self.txt_check.setChecked(True)
 		self.txt_check.clicked.connect(self.clear_txt)
 
+		self.txt_label = QtGui.QLabel(u'Lista de Palavras')
+		self.txt_label.setEnabled(False)
+
 		self.txt_file = QtGui.QLineEdit()
 		self.txt_file.setReadOnly(True)
 		self.txt_file.setEnabled(False)
@@ -101,10 +104,11 @@ class UFPARecord(QtGui.QMainWindow):
 		self.txt_button = QtGui.QPushButton('Procurar')
 		self.txt_button.setMinimumWidth(150)
 		self.txt_button.setStatusTip(u'Procurar a lista de palavras')
+		self.txt_button.setEnabled(False)
 		self.txt_button.clicked.connect(self.open_wlist_file)
 
 		hb_wlist = QtGui.QHBoxLayout()
-		hb_wlist.addWidget(QtGui.QLabel('Lista de palavras'))
+		hb_wlist.addWidget(self.txt_label)
 		hb_wlist.addWidget(self.txt_file)
 		hb_wlist.addWidget(self.txt_button)
 		hb_wlist.addSpacing(20)
@@ -594,6 +598,7 @@ class UFPARecord(QtGui.QMainWindow):
 
 	def clear_txt(self):
 		self.txt_file.clear()
+		self.txt_label.setEnabled(not self.txt_check.isChecked())
 		self.txt_file.setEnabled(not self.txt_check.isChecked())
 		self.txt_button.setEnabled(not self.txt_check.isChecked())
 
@@ -607,7 +612,10 @@ class UFPARecord(QtGui.QMainWindow):
 
 		if not self.paused and not self.recording: # start recording
 			self.recording = True
+			self.txt_check.setEnabled(False)
+			self.txt_label.setEnabled(False)
 			self.txt_button.setEnabled(False)
+			self.txt_file.setEnabled(False)
 
 			# create logger
 			self.logger = logging.getLogger()

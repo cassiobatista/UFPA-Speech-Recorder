@@ -41,11 +41,11 @@ class UFPARegister(QtGui.QMainWindow):
 		def rec_demo():
 			p = pyaudio.PyAudio()
 			stream = p.open(input=True, 
-						format=pyaudio.paInt8, channels=1, rate=8000,
-						frames_per_buffer=512)
+						format=pyaudio.paInt16, channels=1, rate=44100,
+						frames_per_buffer=1024)
 
-			for i in xrange(4):
-				snd_data = stream.read(512)
+			for i in xrange(5):
+				snd_data = stream.read(1024)
 
 			del(snd_data)
 			stream.stop_stream()
