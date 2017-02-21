@@ -25,6 +25,7 @@
 import sys
 import os
 import time
+import random
 import shutil
 
 from PyQt4 import QtCore, QtGui
@@ -836,13 +837,10 @@ class LogThread(QtCore.QThread):
 		self.i -= idx
 
 	def get_wlist(self):
-		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',
-				'GELO', 'REMO', 'CASA', 'MORRE', 'GALHO', 'MASSA', 'AQUI',\
-				'PASTO', 'CARTA', 'CINTO', 'TEMPO', 'LAVAM', 'ANÃO', 'PRATO',\
-				'CLARO', 'PEDAÇO', 'MÁGICO', 'DOMINÓ', 'vida', 'tubo', 'fale',\
-				'mina', 'juba', 'paga', 'cama', 'gelo', 'remo', 'casa', 'morre',\
-				'galho', 'massa', 'aqui', 'pasto', 'carta', 'cinto', 'tempo',\
-				'lavam', 'anão', 'prato', 'claro', 'pedaço', 'mágico', 'dominó' ]
+		return [ 'Vida', 'Tubo', 'Fale', 'Mina', 'Juba', 'Paga', 'Cama',\
+				'Gelo', 'Remo', 'Casa', 'Morre', 'Galho', 'Massa', 'Aqui',\
+				'Pasto', 'Carta', 'Cinto', 'Tempo', 'Lavam', 'Anão', 'Prato',\
+				'Claro', 'Pedaço', 'Mágico', 'Dominó' ]
 
 	def run(self):
 		self.i = 0
@@ -851,6 +849,8 @@ class LogThread(QtCore.QThread):
 		else:
 			with open(self.wlfile, 'r') as f:
 				self.wordlist = f.read().splitlines()
+
+		random.shuffle(self.wordlist)
 
 		wcolors = ['_red', '_yellow', '_green']
 		while self.i < len(self.wordlist):

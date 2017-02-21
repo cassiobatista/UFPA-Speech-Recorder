@@ -13,20 +13,21 @@
 # Nelson C. Sampaio Neto  - dnelsonneto@gmail.com
 
 
+import os
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-import os
-from datetime import datetime
+import pyaudio
+import threading
+import zipfile
 
 from PyQt4 import QtCore, QtGui
+from datetime import datetime
 
 import info
 from ufparec import UFPARecord
 from ufpatools import UFPAZip, UFPAUpload
-
-import zipfile
 
 
 class UFPARegister(QtGui.QMainWindow):
@@ -36,9 +37,24 @@ class UFPARegister(QtGui.QMainWindow):
 
 	def __init__(self):
 		super(UFPARegister, self).__init__()
+
+		def rec_demo():
+			p = pyaudio.PyAudio()
+			stream = p.open(input=True, 
+						format=pyaudio.paInt8, channels=1, rate=8000,
+						frames_per_buffer=512)
+
+			for i in xrange(4):
+				snd_data = stream.read(512)
+
+			del(snd_data)
+			stream.stop_stream()
+			stream.close()
+			p.terminate()
+
 		self.init_main_screen()
 		self.init_menu()
-		self.config()
+		threading.Thread(target=rec_demo).start()
 
 	def config(self):
 		if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
