@@ -22,7 +22,7 @@ import logging
 
 DEBUG = False
 
-LOGFILE = u'ufpasr.log'
+LOGFILE = u'ufpalog.log'
 
 SYS_OS = platform.system().lower()
 SYS_HOME_PATH = 'HOMEPATH' if SYS_OS == 'windows' else 'HOME'

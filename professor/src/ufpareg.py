@@ -406,4 +406,7 @@ class UFPARegister(QtGui.QMainWindow):
 		self.gender_m.setChecked(False)
 		self.radio_group.setExclusive(True)
 
+		self.logger = info.get_logger()
+		self.uid = datetime.now().strftime('_%Y%m%d-%H%M%S')
+
 ### EOF ###
