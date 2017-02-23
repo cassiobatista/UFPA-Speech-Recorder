@@ -44,7 +44,7 @@ from collections import deque
 import info
 from ufpatools import UFPAZip, UFPAUpload
 
-class UFPARecord(QtGui.QMainWindow):
+class UFPARead(QtGui.QMainWindow):
 
 	closed = QtCore.pyqtSignal()
 
@@ -79,7 +79,7 @@ class UFPARecord(QtGui.QMainWindow):
 		self.czip.show()
 
 	def __init__(self, parent, state, school, name, uid):
-		super(UFPARecord, self).__init__()
+		super(UFPARead, self).__init__()
 
 		self.parent = parent
 		self.state = state
@@ -189,19 +189,19 @@ class UFPARecord(QtGui.QMainWindow):
 		gb_semaphore.setLayout(hb_semaphore)
 		# -------------
 
-		self.prev_button = QtGui.QPushButton()
-		self.prev_button.setIcon(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'previous.png')))
-		self.prev_button.setIconSize(QtCore.QSize(65,65))
-		self.prev_button.setStatusTip(u'Gravar a palavra anterior')
-		self.prev_button.setToolTip(u'Palavra anterior')
-		self.prev_button.setMinimumSize(90,90)
-		self.prev_button.setFlat(True)
-		self.prev_button.setStyleSheet('QPushButton:hover:!pressed' + 
-					'{background-color: black; border: 3px solid lightgray;}')
-		self.prev_button.setEnabled(False)
-		self.prev_button.clicked.connect(self.wprev)
-		self.prev_button.setShortcut(QtCore.Qt.Key_Left)
+		#self.prev_button = QtGui.QPushButton()
+		#self.prev_button.setIcon(QtGui.QIcon(os.path.join(
+		#			info.SRC_DIR_PATH, 'images', 'previous.png')))
+		#self.prev_button.setIconSize(QtCore.QSize(65,65))
+		#self.prev_button.setStatusTip(u'Gravar a palavra anterior')
+		#self.prev_button.setToolTip(u'Palavra anterior')
+		#self.prev_button.setMinimumSize(90,90)
+		#self.prev_button.setFlat(True)
+		#self.prev_button.setStyleSheet('QPushButton:hover:!pressed' + 
+		#			'{background-color: black; border: 3px solid lightgray;}')
+		#self.prev_button.setEnabled(False)
+		#self.prev_button.clicked.connect(self.wprev)
+		#self.prev_button.setShortcut(QtCore.Qt.Key_Left)
 
 		self.rec_button = QtGui.QPushButton()
 		self.rec_button.setIcon(QtGui.QIcon(os.path.join(
@@ -230,11 +230,23 @@ class UFPARecord(QtGui.QMainWindow):
 		self.next_button.clicked.connect(self.wnext)
 		self.next_button.setShortcut(QtCore.Qt.Key_Right)
 
+		self.newreg_button = QtGui.QPushButton()
+		self.newreg_button.setIconSize(QtCore.QSize(65,65))
+		self.newreg_button.setStatusTip(u'Cadastrar novo aluno')
+		self.newreg_button.setToolTip(u'Novo registro')
+		self.newreg_button.setMinimumSize(90,90)
+		self.newreg_button.setFlat(True)
+		self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
+					'{background-color: black; border: 3px solid lightgray;}')
+		self.newreg_button.setEnabled(False)
+		self.newreg_button.clicked.connect(self.new_reg)
+
 		hb_rec = QtGui.QHBoxLayout()
+		hb_rec.addWidget(self.newreg_button)
 		hb_rec.addStretch()
-		hb_rec.addWidget(self.prev_button)
 		hb_rec.addWidget(self.rec_button)
 		hb_rec.addWidget(self.next_button)
+		#hb_rec.addSpacing(100)
 		hb_rec.addStretch()
 
 		gb_rec = QtGui.QGroupBox()
@@ -538,9 +550,17 @@ class UFPARecord(QtGui.QMainWindow):
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'rec.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
-			self.rec_button.setStatusTip(u'Reinicia a gravação desde o início')
-			self.rec_button.setToolTip(u'Reiniciar gravação')
+			self.rec_button.setStatusTip(u'')
+			self.rec_button.setToolTip(u'')
+			self.rec_button.setEnabled(False)
 			self.rec_button.update()
+
+			self.next_button.setStatusTip(u'')
+			self.next_button.setToolTip(u'')
+
+			self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
+						info.SRC_DIR_PATH, 'images', 'add.png')))
+			self.newreg_button.setEnabled(True)
 
 		elif act == '_error':
 			self.finished = True
@@ -667,17 +687,24 @@ class UFPARecord(QtGui.QMainWindow):
 		self.rec_button.setIcon(void_icon)
 		self.rec_button.setPalette(color)
 
-		color = QtGui.QPalette(self.prev_button.palette())
-		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
-		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
-		self.prev_button.setIcon(void_icon)
-		self.prev_button.setPalette(color)
+		#color = QtGui.QPalette(self.prev_button.palette())
+		#color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		#color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		#self.prev_button.setIcon(void_icon)
+		#self.prev_button.setPalette(color)
 
 		color = QtGui.QPalette(self.next_button.palette())
 		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
 		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
 		self.next_button.setIcon(void_icon)
 		self.next_button.setPalette(color)
+
+		self.newreg_button.setEnabled(False)
+		color = QtGui.QPalette(self.newreg_button.palette())
+		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
+		self.newreg_button.setIcon(void_icon)
+		self.newreg_button.setPalette(color)
 
 		self.tb.setMaximumHeight(0) # gambiarras
 
@@ -693,8 +720,8 @@ class UFPARecord(QtGui.QMainWindow):
 	def restore_gui(self):
 		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
-		self.prev_button.setIcon(QtGui.QIcon(info.img_path('previous.png')))
 		self.next_button.setIcon(QtGui.QIcon(info.img_path('next.png')))
+		#self.prev_button.setIcon(QtGui.QIcon(info.img_path('previous.png')))
 
 		self.tb.setMaximumHeight(45)
 
@@ -720,6 +747,7 @@ class UFPARecord(QtGui.QMainWindow):
 			return
 
 		if not self.paused and not self.recording: # start recording
+			self.finished = False
 			self.recording = True
 			self.txt_button.setEnabled(False)
 			self.txt_check.setEnabled(False)
@@ -783,7 +811,7 @@ class UFPARecord(QtGui.QMainWindow):
 			while self.mic_ready:
 				pass
 
-			self.prev_button.setEnabled(True)
+			#self.prev_button.setEnabled(True)
 			self.next_button.setEnabled(True)
 		elif self.paused and self.recording: # resume recording
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
@@ -803,17 +831,17 @@ class UFPARecord(QtGui.QMainWindow):
 			while self.mic_ready:
 				pass
 
-			self.prev_button.setEnabled(False)
+			#self.prev_button.setEnabled(False)
 			self.next_button.setEnabled(False)
 
-	def wprev(self):
-		self.thread.wprev()
+	#def wprev(self):
+	#	self.thread.wprev()
 
-		time.sleep(.25)
-		self.rec_button.click()
+	#	time.sleep(.25)
+	#	self.rec_button.click()
 
-		self.paused = False
-		self.thread.paused = False
+	#	self.paused = False
+	#	self.thread.paused = False
 
 	def wnext(self):
 		self.thread.wnext()
@@ -982,8 +1010,8 @@ class LogThread(QtCore.QThread):
 	def wnext(self):
 		self.i += 1
 
-	def wprev(self):
-		self.i -= 1
+	#def wprev(self):
+	#	self.i -= 1
 
 	def get_wlist(self):
 		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',

@@ -26,7 +26,7 @@ from PyQt4 import QtCore, QtGui
 from datetime import datetime
 
 import info
-from ufparec import UFPARecord
+from ufparead import UFPARead
 from ufpatools import UFPAZip, UFPAUpload
 
 
@@ -34,6 +34,7 @@ class UFPARegister(QtGui.QMainWindow):
 
 	uid = datetime.now().strftime('_%Y%m%d-%H%M%S')
 	last_dir = info.ROOT_DIR_PATH
+	regloaded = False
 
 	def __init__(self, logger):
 		super(UFPARegister, self).__init__()
@@ -94,10 +95,10 @@ class UFPARegister(QtGui.QMainWindow):
 		self.group.addItem(u'Controle')
 
 		hb_applier = QtGui.QHBoxLayout()
-		hb_applier.addWidget(QtGui.QLabel('Aplicador'))
+		hb_applier.addWidget(QtGui.QLabel(u'Nome Completo\n\t(Aplicador)'.expandtabs(4)))
 		hb_applier.addWidget(self.applier)
 		hb_applier.addSpacing(50) # --
-		hb_applier.addWidget(QtGui.QLabel('Grupo'))
+		hb_applier.addWidget(QtGui.QLabel(u'Grupo'))
 		hb_applier.addWidget(self.group)
 
 		gb_applier = QtGui.QGroupBox(u'Campos para o(a) aplicador(a)')
@@ -119,7 +120,8 @@ class UFPARegister(QtGui.QMainWindow):
 		self.student.setMinimumWidth(500)
 
 		hb_student = QtGui.QHBoxLayout()
-		hb_student.addWidget(QtGui.QLabel('Aluno'))
+		hb_student.addWidget(QtGui.QLabel('Nome Completo\n\t(Aluno)'.expandtabs(8)))
+		#hb_student.addWidget(QtGui.QLabel('Nome Completo\n\t(Aluno)'))
 		hb_student.addWidget(self.student)
 		# -------------
 
@@ -168,7 +170,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.grade.addItem(str(med) + u' º série (ensino médio)')
 
 		hb_compl = QtGui.QHBoxLayout()
-		hb_compl.addWidget(QtGui.QLabel(u'Gênero'))
+		hb_compl.addWidget(QtGui.QLabel(u'Sexo'))
 		hb_compl.addWidget(self.gender_m)
 		hb_compl.addWidget(self.gender_f)
 		hb_compl.addSpacing(50) # --
@@ -359,6 +361,21 @@ class UFPARegister(QtGui.QMainWindow):
 		QtGui.QMessageBox.information(self, u'Sobre o app', info.INFO)
 		return
 
+	def input_error(self, field):
+		msg = u'O campo <b>"%s"</b> não foi corretamente preenchido.' % field
+		QtGui.QMessageBox.warning(self, u'Erro nos dados de entrada', 
+					msg + 
+					u'<br>' +
+					u'Por favor, verifique novamente o formulário.' + 
+					u'<br>' +
+					u'Se o problema persistir, entre em contato nos emails:' + 
+					u'<br>' +
+					u'<a href=mailto:%s>%s</a>' % (info.MAIL['cassio'], info.MAIL['cassio']) +
+					u'<br>' +
+					u'<a href=mailto:%s>%s</a>' % (info.MAIL['nelson'], info.MAIL['nelson']) +
+					u'<br>')
+		self.logger.error(u'Erro no preenchimento dos dados')
+
 	def register(self):
 		applier = unicode(self.applier.text().toUtf8(), 'utf-8')
 		group   = unicode(self.group.currentText().toUtf8(), 'utf-8')
@@ -376,20 +393,32 @@ class UFPARegister(QtGui.QMainWindow):
 		else:
 			gender = u''
 
-		if  len(applier)     < 10 \
-			or len(school)   < 10 \
-			or len(student)  < 10 \
-			or len(city)     < 4  \
-			or group  == u'' \
-			or state  == u'' \
-			or age    == u'' \
-			or grade  == u'' \
-			or gender == u'':
-			QtGui.QMessageBox.information(self, u'Erro nos dados de entrada', 
-					u'Alguma informação não foi devidamente preenchida.\n' + 
-					u'Por favor, verifique novamente o formulário.\n' + 
-					u'Se o problema persistir, entre em contato com o Nelson.')
-			self.logger.error(u'Erro no preenchimento dos dados')
+		if len(applier) < 6:
+			self.input_error(u'Nome completo do aplicador')
+			return
+		elif group == u'':
+			self.input_error(u'Grupo')
+			return
+		elif len(school) < 3:
+			self.input_error(u'Nome da Escola')
+			return
+		elif len(student) < 6:
+			self.input_error(u'Nome completo do aluno')
+			return
+		elif len(city) < 3:
+			self.input_error(u'Nome do cidade')
+			return
+		elif state == u'':
+			self.input_error(u'Estado')
+			return
+		elif gender == u'':
+			self.input_error(u'Sexo')
+			return
+		elif age == u'':
+			self.input_error(u'Idade')
+			return
+		elif grade  == u'':
+			self.input_error(u'Série')
 			return
 		else:
 			# path: src/state
@@ -432,10 +461,13 @@ class UFPARegister(QtGui.QMainWindow):
 			self.module.closed.connect(self.show)
 			self.module.setWindowTitle(info.TITLE)
 			self.module.move(200,150)
-			self.module.show()
 			self.module.setWindowIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'ufpa.png')))
-			self.module.show()
+			if self.regloaded:
+				self.regloaded = False
+				self.module.show()
+			else:
+	 			self.module.read_module()
 
 	def clear(self):
 		self.applier.clear()
@@ -471,11 +503,11 @@ class UFPAModule(QtGui.QMainWindow):
 
 	def init_main_screen(self):
 		book = QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images','read.png'))
+					info.SRC_DIR_PATH, 'images', 'read.png'))
 		self.read_button = QtGui.QPushButton()
 		self.read_button.setAutoFillBackground(True)
 		self.read_button.setIcon(book)
-		self.read_button.setStatusTip(u'Iniciar o módulo de leitura')
+		self.read_button.setStatusTip(u'Refazer o módulo de leitura')
 		self.read_button.setToolTip(u'Leitura')
 		self.read_button.setIconSize(QtCore.QSize(220,220))
 		self.read_button.setAutoDefault(True)
@@ -497,7 +529,7 @@ class UFPAModule(QtGui.QMainWindow):
 		hb_buttons.addWidget(self.read_button)
 		hb_buttons.addWidget(self.repeat_button)
 
-		gb_buttons = QtGui.QGroupBox(u'Qual módulo você deseja utilizar agora?')
+		gb_buttons = QtGui.QGroupBox(u'O que você de seja fazer?')
 		gb_buttons.setLayout(hb_buttons)
 
 		self.vb_layout_main = QtGui.QVBoxLayout()
@@ -522,7 +554,7 @@ class UFPAModule(QtGui.QMainWindow):
 		file_menu.addAction(act_exit)
 
 	def read_module(self):
-		self.rec = UFPARecord(self.parent, 
+		self.rec = UFPARead(self.parent, 
 					self.state, self.school, self.student, self.uid)
 		self.rec.closed.connect(self.show)
 		self.rec.move(230,30) # try to centralize

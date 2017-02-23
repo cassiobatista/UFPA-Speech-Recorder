@@ -20,7 +20,7 @@ import os
 import platform
 import logging
 
-DEBUG = False
+DEBUG = True
 
 LOGFILE = u'ufpalog.log'
 
@@ -50,6 +50,9 @@ INFO =  TITLE + '\n' \
 		u'Grupo FalaBrasil\n' + \
 		u'Instituto de Ciências Exatas e Naturais\n' + \
 		u'Universidade Federal do Pará\n'
+
+MAIL = {'cassio':u'cassio.batista.13@gmail.com',
+		'nelson':u'dnelsonneto@gmail.com'}
 
 def img_path(img):
 	return os.path.join(SRC_DIR_PATH, 'images', img)
