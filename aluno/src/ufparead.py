@@ -89,6 +89,7 @@ class UFPARead(QtGui.QMainWindow):
 
 		self.init_main_screen()
 		self.init_menu()
+		self.setFocusPolicy(QtCore.Qt.NoFocus)
 
 	def init_main_screen(self):
 		self.txt_check = QtGui.QCheckBox(u'Carregar lista interna de palavras')
@@ -109,6 +110,7 @@ class UFPARead(QtGui.QMainWindow):
 		self.txt_button.clicked.connect(self.open_wlist_file)
 
 		hb_wlist = QtGui.QHBoxLayout()
+		hb_wlist.addSpacing(22)
 		hb_wlist.addWidget(self.txt_label)
 		hb_wlist.addWidget(self.txt_file)
 		hb_wlist.addWidget(self.txt_button)
@@ -117,9 +119,6 @@ class UFPARead(QtGui.QMainWindow):
 		vb_wlist = QtGui.QVBoxLayout()
 		vb_wlist.addWidget(self.txt_check)
 		vb_wlist.addLayout(hb_wlist)
-
-		gb_wlist = QtGui.QGroupBox()
-		gb_wlist.setLayout(vb_wlist)
 		# -------------
 
 		self.wshow = QtGui.QLabel()
@@ -189,24 +188,25 @@ class UFPARead(QtGui.QMainWindow):
 		gb_semaphore.setLayout(hb_semaphore)
 		# -------------
 
-		#self.prev_button = QtGui.QPushButton()
-		#self.prev_button.setIcon(QtGui.QIcon(os.path.join(
-		#			info.SRC_DIR_PATH, 'images', 'previous.png')))
-		#self.prev_button.setIconSize(QtCore.QSize(65,65))
-		#self.prev_button.setStatusTip(u'Gravar a palavra anterior')
-		#self.prev_button.setToolTip(u'Palavra anterior')
-		#self.prev_button.setMinimumSize(90,90)
-		#self.prev_button.setFlat(True)
-		#self.prev_button.setStyleSheet('QPushButton:hover:!pressed' + 
-		#			'{background-color: black; border: 3px solid lightgray;}')
-		#self.prev_button.setEnabled(False)
-		#self.prev_button.clicked.connect(self.wprev)
-		#self.prev_button.setShortcut(QtCore.Qt.Key_Left)
+		self.newreg_button = QtGui.QPushButton()
+		self.newreg_button.setMinimumSize(80,80)
+		self.newreg_button.setFlat(True)
+		self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
+					'{background-color: black; border: 3px solid lightgray;}')
+		self.newreg_button.setEnabled(False)
+		self.newreg_button.clicked.connect(self.new_reg)
+
+		self.repeat_button = QtGui.QPushButton()
+		self.repeat_button.setMinimumSize(80,80)
+		self.repeat_button.setFlat(True)
+		self.repeat_button.setStyleSheet('QPushButton:hover:!pressed' + 
+					'{background-color: black; border: 3px solid lightgray;}')
+		self.repeat_button.setEnabled(False)
 
 		self.rec_button = QtGui.QPushButton()
 		self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'rec.png')))
-		self.rec_button.setIconSize(QtCore.QSize(85,85))
+		self.rec_button.setIconSize(QtCore.QSize(80,80))
 		self.rec_button.setStatusTip(u'Iniciar a gravação de áudio')
 		self.rec_button.setToolTip(u'Iniciar gravação')
 		self.rec_button.setMinimumSize(90,90)
@@ -215,6 +215,7 @@ class UFPARead(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.rec_button.clicked.connect(self.start_rec)
 		self.rec_button.setShortcut(QtCore.Qt.Key_Up)
+		self.rec_button.setShortcut(QtCore.Qt.Key_Down)
 
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
@@ -230,23 +231,13 @@ class UFPARead(QtGui.QMainWindow):
 		self.next_button.clicked.connect(self.wnext)
 		self.next_button.setShortcut(QtCore.Qt.Key_Right)
 
-		self.newreg_button = QtGui.QPushButton()
-		self.newreg_button.setIconSize(QtCore.QSize(65,65))
-		self.newreg_button.setStatusTip(u'Cadastrar novo aluno')
-		self.newreg_button.setToolTip(u'Novo registro')
-		self.newreg_button.setMinimumSize(90,90)
-		self.newreg_button.setFlat(True)
-		self.newreg_button.setStyleSheet('QPushButton:hover:!pressed' + 
-					'{background-color: black; border: 3px solid lightgray;}')
-		self.newreg_button.setEnabled(False)
-		self.newreg_button.clicked.connect(self.new_reg)
-
 		hb_rec = QtGui.QHBoxLayout()
 		hb_rec.addWidget(self.newreg_button)
+		hb_rec.addWidget(self.repeat_button)
 		hb_rec.addStretch()
 		hb_rec.addWidget(self.rec_button)
 		hb_rec.addWidget(self.next_button)
-		#hb_rec.addSpacing(100)
+		hb_rec.addSpacing(100)
 		hb_rec.addStretch()
 
 		gb_rec = QtGui.QGroupBox()
@@ -254,7 +245,7 @@ class UFPARead(QtGui.QMainWindow):
 		# -------------
 
 		self.vb_layout_main = QtGui.QVBoxLayout()
-		self.vb_layout_main.addWidget(gb_wlist)
+		self.vb_layout_main.addLayout(vb_wlist)
 		self.vb_layout_main.addWidget(gb_wshow)
 		self.vb_layout_main.addWidget(gb_semaphore)
 		self.vb_layout_main.addWidget(gb_rec)
@@ -262,6 +253,16 @@ class UFPARead(QtGui.QMainWindow):
 		wg_central = QtGui.QWidget()
 		wg_central.setLayout(self.vb_layout_main)
 		self.setCentralWidget(wg_central)
+
+	#def keyPressEvent(self, event):
+	#	print '#', event.text(), '#', event.key(), '#', event.modifiers(), '@@',
+	#	QtGui.QPushButton.keyPressEvent(self.rec_button, event)
+	#	if event.key() == QtCore.Qt.Key_Space:
+	#		print 'apertei o espaço'
+	#		event.ignore()
+	#	else:
+	#		event.accept()
+	#	print '#', event.text(), '#', event.key(), '#', event.modifiers(), '#'
 
 	def init_menu(self):
 		self.act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -303,7 +304,8 @@ class UFPARead(QtGui.QMainWindow):
 		self.act_add_new.setToolTip(u'Novo registro')
 		self.act_add_new.triggered.connect(self.new_reg)
 
-		self.statusBar()
+		self.sb = self.statusBar()
+		self.sb.setSizeGripEnabled(False)
 		
 		self.tb = QtGui.QToolBar()
 		self.tb.addAction(self.act_exit)
@@ -378,9 +380,12 @@ class UFPARead(QtGui.QMainWindow):
 		return
 
 	def new_reg(self):
-		reply = QtGui.QMessageBox.question(self, u'Cadastrar novo contato',
-					u'Deseja realizar um novo cadastro?\n',
-					QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		reply = QtGui.QMessageBox.warning(self, u'Cadastrar novo contato',
+					u'Você ainda não aplicou o módulo "ouvir e repetir"\n' + 
+					u'No entanto, você poderá realizá-lo posteriormente.\n\n' +
+					u'Gostaria de realizar um novo cadastro agora ' + 
+					u'e deixar o módulo de repetição para depois?\n',
+					QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
 
 		if reply == QtGui.QMessageBox.Yes:
 			if self.thread is not None:
@@ -435,10 +440,6 @@ class UFPARead(QtGui.QMainWindow):
 			self.byellow.update()
 			self.bgreen.update()
 		elif act == '_yellow':
-			#if info.SYS_OS == 'windows':
-			#	self.rec2f = threading.Thread(target=self.record_to_file)
-			#	self.rec2f.start()
-
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
 			color.setColor(QtGui.QPalette.Button, QtCore.Qt.lightGray)
@@ -484,20 +485,20 @@ class UFPARead(QtGui.QMainWindow):
 			self.bgreen.update()
 		elif act == '_gray':
 			color = QtGui.QPalette(self.bred.palette())
-			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
-			color.setColor(QtGui.QPalette.Button, QtCore.Qt.lightGray)
+			color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+			color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
 			self.bred.setAutoFillBackground(True)
 			self.bred.setPalette(color)
 
 			color = QtGui.QPalette(self.byellow.palette())
-			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
-			color.setColor(QtGui.QPalette.Button, QtCore.Qt.lightGray)
+			color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+			color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
 			self.byellow.setAutoFillBackground(True)
 			self.byellow.setPalette(color)
 
 			color = QtGui.QPalette(self.bgreen.palette())
-			color.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
-			color.setColor(QtGui.QPalette.Button, QtCore.Qt.lightGray)
+			color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+			color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
@@ -513,6 +514,9 @@ class UFPARead(QtGui.QMainWindow):
 
 			smiley = QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images','smiley.png'))
+
+			self.sb.setMaximumWidth(2000)
+			self.sb.setStyleSheet('QStatusBar {border: 2px solid black;}')
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.blue)
@@ -560,7 +564,17 @@ class UFPARead(QtGui.QMainWindow):
 
 			self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'add.png')))
+			self.newreg_button.setIconSize(QtCore.QSize(65,65))
 			self.newreg_button.setEnabled(True)
+			self.newreg_button.setStatusTip(u'Cadastrar um novo aluno')
+			self.newreg_button.setToolTip(u'Novo registro')
+
+			self.repeat_button.setIcon(QtGui.QIcon(os.path.join(
+						info.SRC_DIR_PATH, 'images', 'ear.png')))
+			self.repeat_button.setIconSize(QtCore.QSize(75,75))
+			self.repeat_button.setEnabled(True)
+			self.repeat_button.setStatusTip(u'Iniciar o módulo de repetição')
+			self.repeat_button.setToolTip(u'Iniciar repetição')
 
 		elif act == '_error':
 			self.finished = True
@@ -611,7 +625,6 @@ class UFPARead(QtGui.QMainWindow):
 			self.rec_button.update()
 		else:
 			self.block_mic = False
-			#if info.SYS_OS == 'linux':
 			self.rec2f = threading.Thread(target=self.record_to_file)
 			self.rec2f.start()
 
@@ -687,24 +700,11 @@ class UFPARead(QtGui.QMainWindow):
 		self.rec_button.setIcon(void_icon)
 		self.rec_button.setPalette(color)
 
-		#color = QtGui.QPalette(self.prev_button.palette())
-		#color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
-		#color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
-		#self.prev_button.setIcon(void_icon)
-		#self.prev_button.setPalette(color)
-
 		color = QtGui.QPalette(self.next_button.palette())
 		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
 		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
 		self.next_button.setIcon(void_icon)
 		self.next_button.setPalette(color)
-
-		self.newreg_button.setEnabled(False)
-		color = QtGui.QPalette(self.newreg_button.palette())
-		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
-		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
-		self.newreg_button.setIcon(void_icon)
-		self.newreg_button.setPalette(color)
 
 		self.tb.setMaximumHeight(0) # gambiarras
 
@@ -715,13 +715,10 @@ class UFPARead(QtGui.QMainWindow):
 		self.txt_button.hide()
 		self.txt_check.hide()
 
-		self.statusBar().hide()
-
 	def restore_gui(self):
 		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.next_button.setIcon(QtGui.QIcon(info.img_path('next.png')))
-		#self.prev_button.setIcon(QtGui.QIcon(info.img_path('previous.png')))
 
 		self.tb.setMaximumHeight(45)
 
@@ -729,8 +726,6 @@ class UFPARead(QtGui.QMainWindow):
 		self.txt_file.show()
 		self.txt_button.show()
 		self.txt_check.show()
-
-		self.statusBar().show()
 
 	def clear_txt(self):
 		self.txt_file.clear()
@@ -771,8 +766,6 @@ class UFPARead(QtGui.QMainWindow):
 			self.thread = LogThread(unicode(self.txt_file.text(),'utf-8'), self) 
 			self.thread.start()
 
-			#self.wshow.setFrameStyle(54) # QTextEdit.frameStyle() returned 54
-
 			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'pause.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
@@ -786,6 +779,10 @@ class UFPARead(QtGui.QMainWindow):
 
 			self.hide_gui()
 
+			self.sb.setMaximumWidth(22)
+			self.sb.setStyleSheet('QStatusBar {border: 0px;}')
+			self.sb.showMessage(u'.')
+
 			self.finished = False
 		elif not self.paused and self.recording: # pause recording
 			self.thread.paused = True
@@ -796,14 +793,7 @@ class UFPARead(QtGui.QMainWindow):
 			self.paused = True
 			self.thread.recording = False
 
-			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
-						info.SRC_DIR_PATH, 'images', 'resume.png')))
-			self.rec_button.setIconSize(QtCore.QSize(80,80))
-			self.rec_button.setStatusTip(u'Retomar gravação da última palavra')
-			self.rec_button.setToolTip(u'Retomar gravação')
-			self.rec_button.update()
-
-			self.restore_gui()
+			self.sb.showMessage(u'!')
 			if self.rec2f is not None:
 				self.rec2f.join()
 				self.rec2f = None
@@ -811,16 +801,9 @@ class UFPARead(QtGui.QMainWindow):
 			while self.mic_ready:
 				pass
 
-			#self.prev_button.setEnabled(True)
 			self.next_button.setEnabled(True)
 		elif self.paused and self.recording: # resume recording
-			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
-						info.SRC_DIR_PATH, 'images', 'pause.png')))
-			self.rec_button.setIconSize(QtCore.QSize(80,80))
-			self.rec_button.setToolTip(u'Pausar gravação')
-			self.rec_button.update()
-
-			self.hide_gui()
+			self.sb.showMessage(u'.')
 
 			self.paused = False
 			self.thread.paused = False
@@ -1014,13 +997,14 @@ class LogThread(QtCore.QThread):
 	#	self.i -= 1
 
 	def get_wlist(self):
-		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',
-				'GELO', 'REMO', 'CASA', 'MORRE', 'GALHO', 'MASSA', 'AQUI',\
-				'PASTO', 'CARTA', 'CINTO', 'TEMPO', 'LAVAM', 'ANÃO', 'PRATO',\
-				'CLARO', 'PEDAÇO', 'MÁGICO', 'DOMINÓ', 'vida', 'tubo', 'fale',\
-				'mina', 'juba', 'paga', 'cama', 'gelo', 'remo', 'casa', 'morre',\
-				'galho', 'massa', 'aqui', 'pasto', 'carta', 'cinto', 'tempo',\
-				'lavam', 'anão', 'prato', 'claro', 'pedaço', 'mágico', 'dominó' ]
+		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',\
+					'GELO', 'REMO', 'CASA', 'MORRE', 'GALHO', 'MASSA', 'AQUI',\
+					'PASTO', 'CARTA', 'CINTO', 'TEMPO', 'LAVAM', 'ANÃO',\
+					'PRATO', 'CLARO', 'PEDAÇO', 'MÁGICO', 'DOMINÓ', 'vida',\
+					'tubo', 'fale', 'mina', 'juba', 'paga', 'cama', 'gelo',\
+					'remo', 'casa', 'morre', 'galho', 'massa', 'aqui', 'pasto',\
+					'carta', 'cinto', 'tempo', 'lavam', 'anão', 'prato',\
+					'claro', 'pedaço', 'mágico', 'dominó' ]
 
 	def run(self):
 		self.i = 0

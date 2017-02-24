@@ -95,13 +95,15 @@ class UFPARegister(QtGui.QMainWindow):
 		self.group.addItem(u'Controle')
 
 		hb_applier = QtGui.QHBoxLayout()
-		hb_applier.addWidget(QtGui.QLabel(u'Nome Completo\n\t(Aplicador)'.expandtabs(4)))
+		#hb_applier.addWidget(QtGui.QLabel(u'Nome Completo\n\t(Aplicador)'.expandtabs(4)))
+		hb_applier.addWidget(QtGui.QLabel(u'\tNome\nCompleto'.expandtabs(4)))
 		hb_applier.addWidget(self.applier)
 		hb_applier.addSpacing(50) # --
 		hb_applier.addWidget(QtGui.QLabel(u'Grupo'))
 		hb_applier.addWidget(self.group)
 
-		gb_applier = QtGui.QGroupBox(u'Campos para o(a) aplicador(a)')
+		#gb_applier = QtGui.QGroupBox(u'Campos para o(a) aplicador(a)')
+		gb_applier = QtGui.QGroupBox(u'Aplicador(a):')
 		gb_applier.setLayout(hb_applier)
 		# -------------
 
@@ -120,8 +122,8 @@ class UFPARegister(QtGui.QMainWindow):
 		self.student.setMinimumWidth(500)
 
 		hb_student = QtGui.QHBoxLayout()
-		hb_student.addWidget(QtGui.QLabel('Nome Completo\n\t(Aluno)'.expandtabs(8)))
-		#hb_student.addWidget(QtGui.QLabel('Nome Completo\n\t(Aluno)'))
+		#hb_student.addWidget(QtGui.QLabel('Nome Completo\n\t(Aluno)'.expandtabs(8)))
+		hb_student.addWidget(QtGui.QLabel('\tNome\nCompleto'.expandtabs(4)))
 		hb_student.addWidget(self.student)
 		# -------------
 
@@ -151,10 +153,13 @@ class UFPARegister(QtGui.QMainWindow):
 		hb_location.addWidget(self.state)
 		# -------------
 
+		self.radio_group = QtGui.QButtonGroup()
 		self.gender_m = QtGui.QRadioButton(u'M')
 		self.gender_m.setStatusTip(u'Masculino')
 		self.gender_f = QtGui.QRadioButton(u'F')
 		self.gender_f.setStatusTip(u'Feminino')
+		self.radio_group.addButton(self.gender_m)
+		self.radio_group.addButton(self.gender_f)
 
 		self.age = QtGui.QComboBox()
 		self.age.addItem(u'')
@@ -190,22 +195,39 @@ class UFPARegister(QtGui.QMainWindow):
 		vb_form.addSpacing(20)
 		vb_form.addLayout(hb_compl)
 
-		gb_form = QtGui.QGroupBox(u'Campos para o(a) aluno(a)')
+		gb_form = QtGui.QGroupBox(u'Aluno(a):')
 		gb_form.setLayout(vb_form)
 		# -------------
 
-		self.start = QtGui.QPushButton('Cadastrar')
-		self.start.setStatusTip(u'Cadastrar criança e iniciar ' +
-					u'a gravação de áudio')
-		self.start.setShortcut('Ctrl+Space')
-		self.start.setMinimumSize(150,50)
-		self.start.setDefault(True)
-		self.start.setAutoDefault(True)
-		self.start.clicked.connect(self.register)
+		tip = u'Cadastrar criança e iniciar o módulo "Ler"'
+		self.read_button = QtGui.QToolButton()
+		self.read_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+		self.read_button.setStatusTip(tip)
+		self.read_button.setToolTip(tip)
+		self.read_button.setMinimumSize(150,110)
+		self.read_button.setIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'read.png')))
+		self.read_button.setIconSize(QtCore.QSize(80,80))
+		self.read_button.setText(u'1. Cadastrar e "Ler"')
+		self.read_button.clicked.connect(self.register)
+
+		tip = u'Iniciar o módulo "Repetir" para uma criança já cadastrada'
+		self.repeat_button = QtGui.QToolButton()
+		self.repeat_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+		self.repeat_button.setStatusTip(tip)
+		self.repeat_button.setToolTip(tip)
+		self.repeat_button.setIcon(QtGui.QIcon(os.path.join(
+						info.SRC_DIR_PATH, 'images', 'ear.png')))
+		self.repeat_button.setIconSize(QtCore.QSize(80,80))
+		self.repeat_button.setText(u'2. "Ouvir e Repetir"')
+		self.repeat_button.setMinimumSize(150,110)
+		self.repeat_button.setDisabled(True)
+		self.repeat_button.clicked.connect(self.register)
 
 		hb_start = QtGui.QHBoxLayout()
 		hb_start.addStretch()
-		hb_start.addWidget(self.start)
+		hb_start.addWidget(self.read_button)
+		hb_start.addWidget(self.repeat_button)
 
 		gb_start = QtGui.QGroupBox()
 		gb_start.setLayout(hb_start)
@@ -287,9 +309,26 @@ class UFPARegister(QtGui.QMainWindow):
 			self.gender_m.setChecked(True)
 		elif register['Gênero'] == u'Feminino':
 			self.gender_f.setChecked(True)
+		self.uid = '_' + register['ID']
 
 		self.last_dir = os.path.dirname(filename)
 		self.logger.debug(u'Arquivo com dados já existentes carregado.')
+
+		self.applier.setEnabled(False)
+		self.group.setEnabled(False)
+		self.school.setEnabled(False)
+		self.student.setEnabled(False)
+		self.city.setEnabled(False)
+		self.state.setEnabled(False)
+		self.gender_m.setEnabled(False)
+		self.gender_f.setEnabled(False)
+		self.age.setEnabled(False)
+		self.grade.setEnabled(False)
+
+		self.read_button.setEnabled(False)
+		self.repeat_button.setEnabled(True)
+
+		self.regloaded = True
 
 	def init_menu(self):
 		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -325,6 +364,11 @@ class UFPARegister(QtGui.QMainWindow):
 		act_cloud.setStatusTip(u'Fazer upload do áudios compactados para a nuvem')
 		#act_cloud.triggered.connect(self.upload)
 
+		act_clean = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'clean.png')), u'&Limpar', self)
+		act_clean.setStatusTip(u'Restaura os campos da interface de cadastro')
+		act_clean.triggered.connect(self.clear)
+
 		self.statusBar()
 	
 		toolbar = self.addToolBar('Standard')
@@ -334,8 +378,48 @@ class UFPARegister(QtGui.QMainWindow):
 		#toolbar.addAction(act_cfg)
 		toolbar.addAction(act_zip)
 		#toolbar.addAction(act_cloud)
+		toolbar.addAction(act_clean)
 
 	def closeEvent(self, event):
+		applier = unicode(self.applier.text().toUtf8(), 'utf-8')
+		group   = unicode(self.group.currentText().toUtf8(), 'utf-8')
+		school  = unicode(self.school.text().toUtf8(), 'utf-8')
+		student = unicode(self.student.text().toUtf8(), 'utf-8')
+		city    = unicode(self.city.text().toUtf8(), 'utf-8')
+		state   = unicode(self.state.currentText().toUtf8(), 'utf-8')
+		age     = unicode(self.age.currentText().toUtf8(), 'utf-8')
+		grade   = unicode(self.grade.currentText().toUtf8(), 'utf-8')
+
+		if self.gender_f.isChecked():
+			gender = u'Feminino'
+		elif self.gender_m.isChecked():
+			gender = u'Masculino'
+		else:
+			gender = u''
+
+		form_full = False
+		if applier   != u'':
+			form_full = True
+		elif group   != u'':
+			form_full = True
+		elif school  != u'':
+			form_full = True
+		elif student != u'':
+			form_full = True
+		elif city    != u'':
+			form_full = True
+		elif state   != u'':
+			form_full = True
+		elif gender  != u'':
+			form_full = True
+		elif age     != u'':
+			form_full = True
+		elif grade   != u'':
+			form_full = True
+
+		if not form_full:
+			QtGui.qApp.quit()
+
 		reply = QtGui.QMessageBox.question(self, u'Fechar UFPA Speech Recorder', 
 					u'Todos os dados preenchidos serão perdidos.\n\n' + 
 					u'Você deseja realmente sair?\n', 
@@ -347,6 +431,45 @@ class UFPARegister(QtGui.QMainWindow):
 			event.ignore()
 
 	def quit_app(self):
+		applier = unicode(self.applier.text().toUtf8(), 'utf-8')
+		group   = unicode(self.group.currentText().toUtf8(), 'utf-8')
+		school  = unicode(self.school.text().toUtf8(), 'utf-8')
+		student = unicode(self.student.text().toUtf8(), 'utf-8')
+		city    = unicode(self.city.text().toUtf8(), 'utf-8')
+		state   = unicode(self.state.currentText().toUtf8(), 'utf-8')
+		age     = unicode(self.age.currentText().toUtf8(), 'utf-8')
+		grade   = unicode(self.grade.currentText().toUtf8(), 'utf-8')
+
+		if self.gender_f.isChecked():
+			gender = u'Feminino'
+		elif self.gender_m.isChecked():
+			gender = u'Masculino'
+		else:
+			gender = u''
+
+		form_full = False
+		if applier   != u'':
+			form_full = True
+		elif group   != u'':
+			form_full = True
+		elif school  != u'':
+			form_full = True
+		elif student != u'':
+			form_full = True
+		elif city    != u'':
+			form_full = True
+		elif state   != u'':
+			form_full = True
+		elif gender  != u'':
+			form_full = True
+		elif age     != u'':
+			form_full = True
+		elif grade   != u'':
+			form_full = True
+
+		if not form_full:
+			QtGui.qApp.quit()
+
 		reply = QtGui.QMessageBox.question(self, u'Fechar UFPA Speech Recorder', 
 					u'Todos os dados preenchidos serão perdidos.\n\n' +
 					u'Você deseja realmente sair?\n',
@@ -368,11 +491,11 @@ class UFPARegister(QtGui.QMainWindow):
 					u'<br>' +
 					u'Por favor, verifique novamente o formulário.' + 
 					u'<br>' +
-					u'Se o problema persistir, entre em contato nos emails:' + 
+					u'Se o problema persistir, entre em contato conosco:' + 
 					u'<br>' +
-					u'<a href=mailto:%s>%s</a>' % (info.MAIL['cassio'], info.MAIL['cassio']) +
+					u'<a href=mailto:{0}>{0}</a>'.format(info.MAIL['cassio']) +
 					u'<br>' +
-					u'<a href=mailto:%s>%s</a>' % (info.MAIL['nelson'], info.MAIL['nelson']) +
+					u'<a href=mailto:{0}>{0}</a>'.format(info.MAIL['nelson']) +
 					u'<br>')
 		self.logger.error(u'Erro no preenchimento dos dados')
 
@@ -400,28 +523,28 @@ class UFPARegister(QtGui.QMainWindow):
 			self.input_error(u'Grupo')
 			return
 		elif len(school) < 3:
-			self.input_error(u'Nome da Escola')
+			self.input_error(u'Escola do aluno')
 			return
 		elif len(student) < 6:
 			self.input_error(u'Nome completo do aluno')
 			return
 		elif len(city) < 3:
-			self.input_error(u'Nome do cidade')
+			self.input_error(u'Cidade do aluno')
 			return
 		elif state == u'':
-			self.input_error(u'Estado')
+			self.input_error(u'Estado do aluno')
 			return
 		elif gender == u'':
-			self.input_error(u'Sexo')
+			self.input_error(u'Sexo do aluno')
 			return
 		elif age == u'':
-			self.input_error(u'Idade')
+			self.input_error(u'Idade do aluno')
 			return
 		elif grade  == u'':
-			self.input_error(u'Série')
+			self.input_error(u'Série do aluno')
 			return
 		else:
-			# path: src/state
+			# ROOT/src/state
 			if not os.path.exists(os.path.join(info.ROOT_DIR_PATH,
 						u"Estado do " + state)):
 				os.mkdir(os.path.join(info.ROOT_DIR_PATH,
@@ -429,14 +552,33 @@ class UFPARegister(QtGui.QMainWindow):
 			os.chdir(os.path.join(info.ROOT_DIR_PATH,
 						u"Estado do " + state))
 
-			# path: src/state/school
+			# ROOT/src/state/city
+			if not os.path.exists(city):
+				os.mkdir(city)
+			os.chdir(city)
+
+			# ROOT/src/state/city/school
 			if not os.path.exists(school):
 				os.mkdir(school)
 			os.chdir(school)
 
-			# path: src/state/school/firstname_uid
+			# ROOT/src/state/city/school/group
+			if not os.path.exists(group):
+				os.mkdir(group)
+			os.chdir(group)
+
+			# ROOT/src/state/city/school/group/firstname_uid
 			if not os.path.exists(student.split()[0].lower() + self.uid):
 				os.mkdir(student.split()[0].lower() + self.uid)
+			else:
+				if self.regloaded:
+					newid = datetime.now().strftime('_%Y%m%d-%H%M%S') # def new uid
+					os.rename(student.split()[0].lower() + self.uid, 
+								student.split()[0].lower() + newid)
+					self.uid = newid 
+					self.logger.debug(u'Atualizando o ID')
+				else:
+					pass # this condition must never exist. Ever
 			os.chdir(student.split()[0].lower() + self.uid)
 
 			self.logger.debug(u'Criando arquivo 1NFO.me')
@@ -455,21 +597,59 @@ class UFPARegister(QtGui.QMainWindow):
 				f.write(u'Gênero: ' + gender   + '\n')
 				f.write(u'Série: '  + grade    + '\n')
 
-			self.logger.debug(u'Iniciando o módulo de gravação.')
+			if not self.regloaded:
+				# ROOT/src/state/city/school/group/firstname_uid/leitura
+				if not os.path.exists(u'leitura'):
+					os.mkdir(u'leitura')
+				else:
+					pass #overwrite audios from the previous applied reading mod
+				os.chdir(u'leitura')
 
-			self.module = UFPAModule(self, state, school, student, self.uid)
-			self.module.closed.connect(self.show)
-			self.module.setWindowTitle(info.TITLE)
-			self.module.move(200,150)
-			self.module.setWindowIcon(QtGui.QIcon(os.path.join(
-						info.SRC_DIR_PATH, 'images', 'ufpa.png')))
-			if self.regloaded:
-				self.regloaded = False
-				self.module.show()
+				self.logger.debug(u'Iniciando o módulo de leitura.')
+
+				self.rec = UFPARead(self,
+							self.state, self.school, self.student, self.uid)
+				self.rec.closed.connect(self.show)
+				self.rec.move(230,30) # try to centralize
+				self.rec.setMinimumSize(900, 700) # define initial size
+				self.rec.setWindowTitle(info.TITLE)
+				self.rec.setWindowIcon(QtGui.QIcon(os.path.join(
+							info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+				self.rec.show()
 			else:
-	 			self.module.read_module()
+				# ROOT/src/state/city/school/group/firstname_uid/repetição
+				if not os.path.exists(u'repetição'):
+					os.mkdir(u'repetição')
+				else:
+					pass #overwrite audios from the previous applied repeating mod
+				os.chdir(u'repetição')
+
+				self.logger.debug(u'Iniciando o módulo de repetição.')
+				return
+
+				self.rep = UFPARepeat(self,
+							self.state, self.school, self.student, self.uid)
+				self.rep.closed.connect(self.show)
+				self.rep.move(230,30) # try to centralize
+				self.rep.setMinimumSize(900, 700) # define initial size
+				self.rep.setWindowTitle(info.TITLE)
+				self.rep.setWindowIcon(QtGui.QIcon(os.path.join(
+							info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+				self.rep.show()
+			self.hide()
 
 	def clear(self):
+		self.applier.setEnabled(True)
+		self.group.setEnabled(True)
+		self.school.setEnabled(True)
+		self.student.setEnabled(True)
+		self.city.setEnabled(True)
+		self.state.setEnabled(True)
+		self.age.setEnabled(True)
+		self.grade.setEnabled(True)
+		self.gender_m.setEnabled(True)
+		self.gender_f.setEnabled(True)
+
 		self.applier.clear()
 		self.group.setCurrentIndex(0)
 		self.school.clear()
@@ -479,95 +659,16 @@ class UFPARegister(QtGui.QMainWindow):
 		self.age.setCurrentIndex(0)
 		self.grade.setCurrentIndex(0)
 
+		self.radio_group.setExclusive(False)
 		self.gender_f.setChecked(False)
 		self.gender_m.setChecked(False)
+		self.radio_group.setExclusive(True)
+
+		self.read_button.setEnabled(True)
+		self.repeat_button.setEnabled(False)
 
 		self.logger = info.get_logger()
 		self.uid = datetime.now().strftime('_%Y%m%d-%H%M%S')
-
-
-class UFPAModule(QtGui.QMainWindow):
-
-	closed = QtCore.pyqtSignal()
-
-	def __init__(self, parent, state, school, student, uid):
-		super(UFPAModule, self).__init__()
-		self.parent = parent
-		self.state = state
-		self.school = school
-		self.student = student
-		self.uid = uid
-
-		self.init_main_screen()
-		self.init_menu()
-
-	def init_main_screen(self):
-		book = QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'read.png'))
-		self.read_button = QtGui.QPushButton()
-		self.read_button.setAutoFillBackground(True)
-		self.read_button.setIcon(book)
-		self.read_button.setStatusTip(u'Refazer o módulo de leitura')
-		self.read_button.setToolTip(u'Leitura')
-		self.read_button.setIconSize(QtCore.QSize(220,220))
-		self.read_button.setAutoDefault(True)
-		self.read_button.clicked.connect(self.read_module)
-
-		headphone = QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images','listen.png'))
-		self.repeat_button = QtGui.QPushButton()
-		self.repeat_button.setAutoFillBackground(True)
-		self.repeat_button.setIcon(headphone)
-		self.repeat_button.setStatusTip(u'Iniciar o módulo de repetição')
-		self.repeat_button.setToolTip(u'Repetição')
-		self.repeat_button.setIconSize(QtCore.QSize(210,220))
-		self.repeat_button.setEnabled(False)
-		self.repeat_button.setAutoDefault(True)
-		self.repeat_button.clicked.connect(self.repeat_module)
-
-		hb_buttons = QtGui.QHBoxLayout()
-		hb_buttons.addWidget(self.read_button)
-		hb_buttons.addWidget(self.repeat_button)
-
-		gb_buttons = QtGui.QGroupBox(u'O que você de seja fazer?')
-		gb_buttons.setLayout(hb_buttons)
-
-		self.vb_layout_main = QtGui.QVBoxLayout()
-		self.vb_layout_main.addWidget(gb_buttons)
-
-		wg_central = QtGui.QWidget()
-		wg_central.setLayout(self.vb_layout_main)
-
-		self.setCentralWidget(wg_central)
-
-	def init_menu(self):
-		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'x.png')), u'&Sair', self)
-		act_exit.setShortcut('Ctrl+Q')
-		act_exit.setStatusTip(u'Fechar')
-		act_exit.triggered.connect(self.close)
-
-		self.statusBar()
-
-		menubar = self.menuBar() 
-		file_menu = menubar.addMenu(u'&Opções')
-		file_menu.addAction(act_exit)
-
-	def read_module(self):
-		self.rec = UFPARead(self.parent, 
-					self.state, self.school, self.student, self.uid)
-		self.rec.closed.connect(self.show)
-		self.rec.move(230,30) # try to centralize
-		self.rec.setMinimumSize(900, 700) # define initial size
-		self.rec.setWindowTitle(info.TITLE)
-		self.rec.setWindowIcon(QtGui.QIcon(os.path.join(
-					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
-		self.rec.show()
-		self.parent.hide()
-		self.close()
-
-	def repeat_module(self):
-		QtGui.QMessageBox.information(self, u'Módulo de repetição', u'Coming soon')
-
+		self.regloaded = False
 
 ### EOF 

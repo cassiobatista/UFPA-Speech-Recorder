@@ -26,12 +26,13 @@ import info
 from ufpareg import UFPARegister
 
 logger = info.get_logger()
+logger.info(u'Iniciando UFPA Speech Recorder ---------------------------------------------------')
 
 try:
 	from PyQt4 import QtCore, QtGui
 except ImportError:
 	print u'Erro: PyQt4 não instalado'
-	logger.error(u'PyQt4 não instalado')
+	logger.error(u'PyQt4 não instalado.')
 	sys.exit()
 
 try:
@@ -57,7 +58,7 @@ if __name__ == '__main__':
 			QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
 	app.installTranslator(translator)
 
-	logger.debug(u'Iniciando interface de cadastro.')
+	logger.debug(u'Iniciando a interface de cadastro.')
 
 	reg = UFPARegister(logger)
 	reg.move(150,100) # try to centralize

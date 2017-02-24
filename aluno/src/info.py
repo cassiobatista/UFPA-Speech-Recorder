@@ -20,7 +20,7 @@ import os
 import platform
 import logging
 
-DEBUG = True
+DEBUG = False
 
 LOGFILE = u'ufpalog.log'
 
@@ -32,27 +32,32 @@ SRC_DIR_PATH  = unicode(str(os.path.abspath(os.path.dirname(
 ROOT_DIR_PATH = unicode(str(os.path.abspath(os.path.join(
 			SRC_DIR_PATH, os.pardir))), 'utf-8')
 
-MODULE = u'Módulo do Aluno'
-
-TITLE = u'UFPA Speech Recorder' + ' - ' + MODULE
-
-INFO =  TITLE + '\n' \
-		u'\n' + \
-		u'Autores:\n' + \
-		u'Cassio Trindade Batista\n' + \
-		u'Nelson Cruz Sampaio Neto\n' + \
-		u'\n' + \
-		u'Contato:\n' + \
-		u'cassio.batista.13@gmail.com\n' + \
-		u'dnelsonneto@gmail.com\n' + \
-		u'\n' + \
-		u'Copyright 2017\n' + \
-		u'Grupo FalaBrasil\n' + \
-		u'Instituto de Ciências Exatas e Naturais\n' + \
-		u'Universidade Federal do Pará\n'
-
 MAIL = {'cassio':u'cassio.batista.13@gmail.com',
 		'nelson':u'dnelsonneto@gmail.com'}
+
+TITLE = u'UFPA Speech Recorder'
+
+INFO =  TITLE + '<br>' \
+		u'<br>' + \
+		u'Autores:' + \
+		u'<br>' + \
+		u'Cassio Trindade Batista' + \
+		u'<br>' + \
+		u'Nelson Cruz Sampaio Neto' + \
+		u'<br><br>' + \
+		u'Contato:' + \
+		u'<br>' + \
+		u'<a href=mailto:{0}>{0}</a>'.format(MAIL['cassio']) + \
+		u'<br>' + \
+		u'<a href=mailto:{0}>{0}</a>'.format(MAIL['nelson']) + \
+		u'<br><br>' + \
+		u'Copyleft 2017' + \
+		u'<br>' + \
+		u'Grupo FalaBrasil' + \
+		u'<br>' + \
+		u'Instituto de Ciências Exatas e Naturais' + \
+		u'<br>' + \
+		u'Universidade Federal do Pará'
 
 def img_path(img):
 	return os.path.join(SRC_DIR_PATH, 'images', img)
