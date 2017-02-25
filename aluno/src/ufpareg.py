@@ -309,7 +309,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.gender_m.setChecked(True)
 		elif register['Gênero'] == u'Feminino':
 			self.gender_f.setChecked(True)
-		self.uid = '_' + register['ID']
+		#self.uid = '_' + register['ID']
 
 		self.last_dir = os.path.dirname(filename)
 		self.logger.debug(u'Arquivo com dados já existentes carregado.')
@@ -544,7 +544,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.input_error(u'Série do aluno')
 			return
 		else:
-			# ROOT/src/state
+			# ROOT/state
 			if not os.path.exists(os.path.join(info.ROOT_DIR_PATH,
 						u"Estado do " + state)):
 				os.mkdir(os.path.join(info.ROOT_DIR_PATH,
@@ -552,33 +552,39 @@ class UFPARegister(QtGui.QMainWindow):
 			os.chdir(os.path.join(info.ROOT_DIR_PATH,
 						u"Estado do " + state))
 
-			# ROOT/src/state/city
+			# ROOT/state/city
 			if not os.path.exists(city):
 				os.mkdir(city)
 			os.chdir(city)
 
-			# ROOT/src/state/city/school
+			# ROOT/state/city/school
 			if not os.path.exists(school):
 				os.mkdir(school)
 			os.chdir(school)
 
-			# ROOT/src/state/city/school/group
+			# ROOT/state/city/school/group
 			if not os.path.exists(group):
 				os.mkdir(group)
 			os.chdir(group)
 
-			# ROOT/src/state/city/school/group/firstname_uid
+			# not working on Windows
+			## ROOT/state/city/school/group/firstname_uid
+			#if not os.path.exists(student.split()[0].lower() + self.uid):
+			#	os.mkdir(student.split()[0].lower() + self.uid)
+			#else:
+			#	if self.regloaded:
+			#		newid = datetime.now().strftime('_%Y%m%d-%H%M%S') # def new uid
+			#		os.rename(student.split()[0].lower() + self.uid, 
+			#					student.split()[0].lower() + newid)
+			#		self.uid = newid 
+			#		self.logger.debug(u'Atualizando o ID')
+			#	else:
+			#		pass # this condition must never exist. Ever
+			#os.chdir(student.split()[0].lower() + self.uid)
+
+			# ROOT/state/city/school/group/firstname_uid
 			if not os.path.exists(student.split()[0].lower() + self.uid):
 				os.mkdir(student.split()[0].lower() + self.uid)
-			else:
-				if self.regloaded:
-					newid = datetime.now().strftime('_%Y%m%d-%H%M%S') # def new uid
-					os.rename(student.split()[0].lower() + self.uid, 
-								student.split()[0].lower() + newid)
-					self.uid = newid 
-					self.logger.debug(u'Atualizando o ID')
-				else:
-					pass # this condition must never exist. Ever
 			os.chdir(student.split()[0].lower() + self.uid)
 
 			self.logger.debug(u'Criando arquivo 1NFO.me')
