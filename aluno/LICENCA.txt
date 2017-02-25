@@ -8,7 +8,7 @@
    the GNU GPL does that. However, we hope that this translation will
   help Brazilian Portuguese speakers understand the GNU GPL better.
 
-  Esta é uma tradução não-oficial da Licença Pública Geral GNU ("GPL
+  Esta é uma tradução não oficial da Licença Pública Geral GNU ("GPL
   GNU") para o português do Brasil. Ela não foi publicada pela Free
 Software Foundation, e legalmente não afirma os termos de distribuição
  de software que utiliza a GPL GNU -- apenas o texto original da GPL
@@ -73,7 +73,7 @@ qualquer pessoa, ou então que nem necessite ser licenciada.
 
   Os termos e condições precisas para cópia, distribuição e
 modificação se encontram abaixo:
-
+
 		      LICENÇA PÚBLICA GERAL GNU
       TERMOS E CONDIÇÕES PARA CÓPIA, DISTRIBUIÇÃO E MODIFICAÇÃO
 
@@ -223,14 +223,14 @@ aos recebedores qualquer outra restrição ao exercício dos direitos
 então adquiridos. Você não é responsável em garantir a concordância de
 terceiros a esta Licença.
 
-  7. Se, em conseqüência de decisões judiciais ou alegações de
+  7. Se, em consequência de decisões judiciais ou alegações de
 infringimento de patentes ou quaisquer outras razões (não limitadas a
 assuntos relacionados a patentes), condições forem impostas a você
 (por ordem judicial, acordos ou outras formas) e que contradigam as
 condições desta Licença, elas não o livram das condições desta
 Licença. Se você não puder distribuir de forma a satisfazer
 simultaneamente suas obrigações para com esta Licença e para com as
-outras obrigações pertinentes, então como conseqüência você não poderá
+outras obrigações pertinentes, então como consequência você não poderá
 distribuir o Programa. Por exemplo, se uma licença de patente não
 permitirá a redistribuição, livre de "royalties", do Programa, por
 todos aqueles que receberem cópias direta ou indiretamente de você,
@@ -254,7 +254,7 @@ distribuir software utilizando outro sistema, e um licenciado não pode
 impor qualquer escolha.
 
 Esta seção destina-se a tornar bastante claro o que se acredita ser
-conseqüência do restante desta Licença.
+consequência do restante desta Licença.
 
   8. Se a distribuição e/ou uso do Programa são restringidos em certos
 países por patentes ou direitos autorais, o detentor dos direitos
@@ -304,7 +304,7 @@ REPAROS E CORREÇÕES.
 ACORDO ESCRITO, OS DETENTORES DOS DIREITOS AUTORAIS, OU QUALQUER OUTRA
 PARTE QUE POSSA MODIFICAR E/OU REDISTRIBUIR O PROGRAMA CONFORME
 PERMITIDO ACIMA, SERÃO RESPONSABILIZADOS POR VOCÊ POR DANOS, INCLUINDO
-QUALQUER DANO EM GERAL, ESPECIAL, ACIDENTAL OU CONSEQÜENTE,
+QUALQUER DANO EM GERAL, ESPECIAL, ACIDENTAL OU CONSEQUENTE,
 RESULTANTES DO USO OU INCAPACIDADE DE USO DO PROGRAMA (INCLUINDO, MAS
 NÃO LIMITADO A, A PERDA DE DADOS OU DADOS TORNADOS INCORRETOS, OU
 PERDAS SOFRIDAS POR VOCÊ OU POR OUTRAS PARTES, OU FALHAS DO PROGRAMA
@@ -326,8 +326,8 @@ efetivamente a inexistência de garantias; e cada arquivo deve possuir
 pelo menos a linha de "copyright" e uma indicação de onde o texto
 completo se encontra.
 
-    <uma linha que forneça o nome do programa e uma idéia do que ele faz.>
-    Copyright (C) <ano>  <nome do autor>
+    UFPA Speech Recorder
+    Copyright (C) 2017  Cassio Trindade Batista
    
     Este programa é software livre; você pode redistribuí-lo e/ou
     modificá-lo sob os termos da Licença Pública Geral GNU, conforme

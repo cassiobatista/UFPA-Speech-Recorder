@@ -435,6 +435,8 @@ class UFPARead(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
+			self.sb.showMessage(u'.')
+
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -457,6 +459,8 @@ class UFPARead(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
+			self.sb.showMessage(u'..')
+
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -478,6 +482,8 @@ class UFPARead(QtGui.QMainWindow):
 			color.setColor(QtGui.QPalette.Button, QtCore.Qt.green)
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
+
+			self.sb.showMessage(u'...')
 
 			self.bred.update()
 			self.byellow.update()
@@ -515,7 +521,7 @@ class UFPARead(QtGui.QMainWindow):
 						info.SRC_DIR_PATH, 'images','smiley.png'))
 
 			self.sb.setMaximumWidth(2000)
-			self.sb.setStyleSheet('QStatusBar {border: 2px solid black;}')
+			self.sb.setStyleSheet('QStatusBar {border: 1px solid black;}')
 
 			color = QtGui.QPalette(self.bred.palette())
 			color.setColor(QtGui.QPalette.Background, QtCore.Qt.blue)
@@ -561,6 +567,8 @@ class UFPARead(QtGui.QMainWindow):
 			self.next_button.setStatusTip(u'')
 			self.next_button.setToolTip(u'')
 
+			self.sb.showMessage(u'')
+
 			self.newreg_button.setIcon(QtGui.QIcon(os.path.join(
 						info.SRC_DIR_PATH, 'images', 'add.png')))
 			self.newreg_button.setIconSize(QtCore.QSize(65,65))
@@ -574,7 +582,6 @@ class UFPARead(QtGui.QMainWindow):
 			self.repeat_button.setEnabled(True)
 			self.repeat_button.setStatusTip(u'Iniciar o módulo de repetição')
 			self.repeat_button.setToolTip(u'Iniciar repetição')
-
 		elif act == '_error':
 			self.finished = True
 			self.recording = False
@@ -667,6 +674,8 @@ class UFPARead(QtGui.QMainWindow):
 			with open(act + '.time.txt', 'w') as f:
 				f.write(datetime.now().strftime('Exibição: %X:%f\n'))
 
+			self.sb.showMessage(u':')
+
 			self.hide_gui()
 
 	def hide_gui(self):
@@ -708,6 +717,7 @@ class UFPARead(QtGui.QMainWindow):
 		self.tb.setMaximumHeight(0) # gambiarras
 
 		self.rec_button.setStyleSheet('QPushButton:focus {border:none; outline:none;}')
+		#self.next_button.setStyleSheet('QPushButton:focus {border:none; outline:none;}')
 
 		self.txt_label.hide()
 		self.txt_file.hide()
@@ -716,6 +726,9 @@ class UFPARead(QtGui.QMainWindow):
 
 	def restore_gui(self):
 		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
+					'{background-color: black; border: 3px solid lightgray;}')
+
+		self.next_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.next_button.setIcon(QtGui.QIcon(info.img_path('next.png')))
 
@@ -765,22 +778,17 @@ class UFPARead(QtGui.QMainWindow):
 			self.thread = LogThread(unicode(self.txt_file.text(),'utf-8'), self) 
 			self.thread.start()
 
-			self.rec_button.setIcon(QtGui.QIcon(os.path.join(
-						info.SRC_DIR_PATH, 'images', 'pause.png')))
-			self.rec_button.setIconSize(QtCore.QSize(80,80))
-			self.rec_button.setStatusTip(u'Pausar gravação')
-			self.rec_button.setToolTip(u'Pausar gravação')
-			self.rec_button.update()
-
 			self.bred.setIcon(QtGui.QIcon())
 			self.byellow.setIcon(QtGui.QIcon())
 			self.bgreen.setIcon(QtGui.QIcon())
 
 			self.hide_gui()
 
-			self.sb.setMaximumWidth(22)
+			self.sb.setMaximumWidth(30)
 			self.sb.setStyleSheet('QStatusBar {border: 0px;}')
-			self.sb.showMessage(u'.')
+
+			self.next_button.setStyleSheet('QPushButton:pressed' + 
+						'{border: none; outline: none;}')
 
 			self.finished = False
 		elif not self.paused and self.recording: # pause recording
@@ -802,28 +810,17 @@ class UFPARead(QtGui.QMainWindow):
 
 			self.next_button.setEnabled(True)
 		elif self.paused and self.recording: # resume recording
-			self.sb.showMessage(u'.')
-
 			self.paused = False
 			self.thread.paused = False
 			self.thread.recording = False
 
 			self.text = None
+			self.sb.showMessage(u'.')
 
 			while self.mic_ready:
 				pass
 
-			#self.prev_button.setEnabled(False)
 			self.next_button.setEnabled(False)
-
-	#def wprev(self):
-	#	self.thread.wprev()
-
-	#	time.sleep(.25)
-	#	self.rec_button.click()
-
-	#	self.paused = False
-	#	self.thread.paused = False
 
 	def wnext(self):
 		self.thread.wnext()

@@ -30,10 +30,8 @@ Dois cliques sobre o arquivo "UFPA-Speech-Recorder"
 3) PyQt4:
 	sudo apt-get install python-pyaudio (opcional, mas recomendado)
 
-# Execução (dentro do diretório "src"):
-1) make
-ou
-2) python -B UFPA-Speech-Recorder.py
+# Execução:
+python -B UFPA-Speech-Recorder.py
 
 
 ##############
@@ -46,7 +44,7 @@ ou
 	email: dnelsonneto@gmail.com
 	Professor da Faculdade de Computação (UFPA)
 
-Copyright 2017:
+Copyleft 2017:
 Grupo FalaBrasil
 Programa de Pós-Graduação em Ciência da Computação
 Universidade Federal do Pará
