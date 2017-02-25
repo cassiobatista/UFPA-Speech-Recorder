@@ -215,7 +215,6 @@ class UFPARead(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.rec_button.clicked.connect(self.start_rec)
 		self.rec_button.setShortcut(QtCore.Qt.Key_Up)
-		self.rec_button.setShortcut(QtCore.Qt.Key_Down)
 
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
@@ -381,9 +380,9 @@ class UFPARead(QtGui.QMainWindow):
 
 	def new_reg(self):
 		reply = QtGui.QMessageBox.warning(self, u'Cadastrar novo contato',
-					u'Você ainda não aplicou o módulo "ouvir e repetir"\n' + 
+					u'Você ainda não aplicou o módulo "Ouvir e Repetir".\n' + 
 					u'No entanto, você poderá realizá-lo posteriormente.\n\n' +
-					u'Gostaria de realizar um novo cadastro agora ' + 
+					u'Gostaria de realizar um novo cadastro agora\n' + 
 					u'e deixar o módulo de repetição para depois?\n',
 					QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
 

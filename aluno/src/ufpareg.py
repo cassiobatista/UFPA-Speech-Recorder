@@ -309,7 +309,7 @@ class UFPARegister(QtGui.QMainWindow):
 			self.gender_m.setChecked(True)
 		elif register['Gênero'] == u'Feminino':
 			self.gender_f.setChecked(True)
-		#self.uid = '_' + register['ID']
+		self.uid = '_' + register['ID']
 
 		self.last_dir = os.path.dirname(filename)
 		self.logger.debug(u'Arquivo com dados já existentes carregado.')
@@ -587,23 +587,23 @@ class UFPARegister(QtGui.QMainWindow):
 				os.mkdir(student.split()[0].lower() + self.uid)
 			os.chdir(student.split()[0].lower() + self.uid)
 
-			self.logger.debug(u'Criando arquivo 1NFO.me')
-			with open('1NFO.me.txt', 'w') as f:
-				f.write(u'Dados do Aplicador\n')
-				f.write(u'Aplicador: '  + applier  + '\n')
-				f.write(u'Grupo: '      + group    + '\n')
-				f.write('\n')
-				f.write(u'Dados do Aluno\n')
-				f.write(u'Aluno: '  + student  + '\n')
-				f.write(u'ID: '     + self.uid.replace('_','') + '\n')
-				f.write(u'Escola: ' + school   + '\n')
-				f.write(u'Idade: '  + age      + '\n')
-				f.write(u'Cidade: ' + city     + '\n')
-				f.write(u'Estado: ' + state    + '\n')
-				f.write(u'Gênero: ' + gender   + '\n')
-				f.write(u'Série: '  + grade    + '\n')
-
 			if not self.regloaded:
+				self.logger.debug(u'Criando arquivo 1NFO.me')
+				with open('1NFO.me.txt', 'w') as f:
+					f.write(u'Dados do Aplicador\n')
+					f.write(u'Aplicador: '  + applier  + '\n')
+					f.write(u'Grupo: '      + group    + '\n')
+					f.write('\n')
+					f.write(u'Dados do Aluno\n')
+					f.write(u'Aluno: '  + student  + '\n')
+					f.write(u'ID: '     + self.uid.replace('_','') + '\n')
+					f.write(u'Escola: ' + school   + '\n')
+					f.write(u'Idade: '  + age      + '\n')
+					f.write(u'Cidade: ' + city     + '\n')
+					f.write(u'Estado: ' + state    + '\n')
+					f.write(u'Gênero: ' + gender   + '\n')
+					f.write(u'Série: '  + grade    + '\n')
+
 				# ROOT/src/state/city/school/group/firstname_uid/leitura
 				if not os.path.exists(u'leitura'):
 					os.mkdir(u'leitura')
