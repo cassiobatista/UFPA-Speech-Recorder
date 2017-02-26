@@ -34,6 +34,7 @@ from PyQt4 import QtCore, QtGui
 from datetime import datetime
 
 import logging
+
 import StringIO
 
 import threading
@@ -77,14 +78,10 @@ class UFPARepeat(QtGui.QMainWindow):
 					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 		self.czip.show()
 
-	def __init__(self, parent, state, school, name, uid):
+	#def __init__(self, parent, state, school, name, uid):
+	def __init__(self, parent=None):
 		super(UFPARepeat, self).__init__()
-
 		self.parent = parent
-		self.state = state
-		self.school = school
-		self.name = name
-		self.uid = uid
 
 		self.init_main_screen()
 		self.init_menu()
@@ -119,6 +116,7 @@ class UFPARepeat(QtGui.QMainWindow):
 		vb_wlist = QtGui.QVBoxLayout()
 		vb_wlist.addWidget(self.txt_check)
 		vb_wlist.addLayout(hb_wlist)
+		vb_wlist.addSpacing(40)
 		# -------------
 
 		region = QtGui.QRegion(
@@ -183,24 +181,22 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.newreg_button.setEnabled(False)
 		self.newreg_button.clicked.connect(self.new_reg)
 
-		self.play_button = QtGui.QPushButton()
+		self.play_button = QtGui.QToolButton()
+		self.play_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
 		self.play_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'play.png')))
-		self.play_button.setIconSize(QtCore.QSize(75,75))
-		#self.play_button.setStatusTip(u'Iniciar a gravação de áudio')
-		self.play_button.setToolTip(u'Iniciar gravação')
-		self.play_button.setMinimumSize(90,90)
-		self.play_button.setFlat(True)
+		self.play_button.setIconSize(QtCore.QSize(65,65))
+		self.play_button.setToolTip(u'Iniciar módulo "Ouvir e Repetir"')
+		self.play_button.setMinimumSize(120,90)
+		self.play_button.setText(u'Iniciar Módulo')
 		self.play_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.play_button.clicked.connect(self.play)
-		#self.play_button.setShortcut(QtCore.Qt.Key_Down)
 
 		self.rec_button = QtGui.QPushButton()
 		self.rec_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'rec.png')))
 		self.rec_button.setIconSize(QtCore.QSize(80,80))
-		#self.rec_button.setStatusTip(u'Iniciar a gravação de áudio')
 		self.rec_button.setToolTip(u'Iniciar gravação')
 		self.rec_button.setMinimumSize(90,90)
 		self.rec_button.setFlat(True)
@@ -208,7 +204,7 @@ class UFPARepeat(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.rec_button.setEnabled(False)
 		self.rec_button.clicked.connect(self.start_rec)
-		#self.rec_button.setShortcut(QtCore.Qt.Key_Up)
+		self.rec_button.setShortcut(QtCore.Qt.Key_Up)
 
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
@@ -222,7 +218,7 @@ class UFPARepeat(QtGui.QMainWindow):
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.next_button.setEnabled(False)
 		self.next_button.clicked.connect(self.wnext)
-		#self.next_button.setShortcut(QtCore.Qt.Key_Right)
+		self.next_button.setShortcut(QtCore.Qt.Key_Right)
 
 		hb_rec = QtGui.QHBoxLayout()
 		hb_rec.addWidget(self.newreg_button)
@@ -288,6 +284,7 @@ class UFPARepeat(QtGui.QMainWindow):
 
 		self.sb = self.statusBar()
 		self.sb.setSizeGripEnabled(False)
+		#self.sb.setStyleSheet('QStatusBar {border: 0px;}')
 		
 		self.tb = QtGui.QToolBar()
 		self.tb.addAction(self.act_exit)
@@ -297,21 +294,6 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.tb.setStyleSheet('QToolBar:focus {border:none; outline:none;}')
 	
 		toolbar = self.addToolBar(self.tb)
-
-	def remove_data(self):
-		state_path = os.path.join(info.ROOT_DIR_PATH, u'Estado do ' + self.state)
-
-		# remove user dir (rm -rf)
-		shutil.rmtree(os.path.join(state_path, self.school,
-					self.name.split()[0].lower() + self.uid))
-
-		# remove school dir, if empty (rmdir)
-		if os.listdir(os.path.join(state_path, self.school)) == []:
-			os.rmdir(os.path.join(state_path, self.school))
-
-		# remove state dir, if empty (rmdir)
-		if os.listdir(state_path) == []:
-			 os.rmdir(state_path)
 
 	def closeEvent(self, event):
 		if self.finished:
@@ -580,8 +562,13 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.txt_label.setEnabled(False)
 		self.txt_file.setEnabled(False)
 
+		logging.disable(logging.NOTSET)
+
 		# create logger
+		# http://stackoverflow.com/a/16966965
 		self.logger = logging.getLogger()
+		map(self.logger.removeHandler, self.logger.handlers[:])
+		map(self.logger.removeFilter,  self.logger.filters[:])
 
 		# create buffers
 		self.log_buff = LogBuffer()
@@ -604,6 +591,8 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.bgreen.setIcon(QtGui.QIcon())
 
 		self.play_button.setEnabled(False)
+		self.play_button.setText(u'')
+		self.play_button.setStyleSheet('QToolButton {border: 0px;}')
 		color = QtGui.QPalette(self.play_button.palette())
 		color.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
 		color.setColor(QtGui.QPalette.Button, QtCore.Qt.transparent)
@@ -800,7 +789,12 @@ class LogThread(QtCore.QThread):
 			self.wordlist = self.get_wlist()
 		else:
 			with open(self.wlfile, 'r') as f:
-				self.wordlist = f.read().splitlines()
+				wordlist = f.read().splitlines()
+
+			self.wordlist = []
+			for word in wordlist:
+				if word not in self.wordlist:
+					self.wordlist.append(word)
 
 		while self.i < len(self.wordlist):
 			if self.paused:
@@ -810,7 +804,7 @@ class LogThread(QtCore.QThread):
 				continue
 
 			try:
-				logging.info(unicode(self.wordlist[self.i],'utf-8'))
+				logging.info(unicode(self.wordlist[self.i],'utf-8').lower())
 				self.recording = True
 				self.blocked = True
 			except UnicodeError:

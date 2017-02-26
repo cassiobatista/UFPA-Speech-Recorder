@@ -45,6 +45,7 @@ from collections import deque
 
 import info
 from ufpatools import UFPAZip, UFPAUpload
+from ufparepeat import UFPARepeat
 
 class UFPARead(QtGui.QMainWindow):
 
@@ -80,14 +81,10 @@ class UFPARead(QtGui.QMainWindow):
 					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 		self.czip.show()
 
-	def __init__(self, parent, state, school, name, uid):
+	#def __init__(self, parent, state, school, name, uid):
+	def __init__(self, parent=None):
 		super(UFPARead, self).__init__()
-
 		self.parent = parent
-		self.state = state
-		self.school = school
-		self.name = name
-		self.uid = uid
 
 		self.init_main_screen()
 		self.init_menu()
@@ -204,6 +201,7 @@ class UFPARead(QtGui.QMainWindow):
 		self.repeat_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
 		self.repeat_button.setEnabled(False)
+		self.repeat_button.clicked.connect(self.repeat_module)
 
 		self.rec_button = QtGui.QPushButton()
 		self.rec_button.setIcon(QtGui.QIcon(os.path.join(
@@ -254,16 +252,6 @@ class UFPARead(QtGui.QMainWindow):
 		wg_central = QtGui.QWidget()
 		wg_central.setLayout(self.vb_layout_main)
 		self.setCentralWidget(wg_central)
-
-	#def keyPressEvent(self, event):
-	#	print '#', event.text(), '#', event.key(), '#', event.modifiers(), '@@',
-	#	QtGui.QPushButton.keyPressEvent(self.rec_button, event)
-	#	if event.key() == QtCore.Qt.Key_Space:
-	#		print 'apertei o espaço'
-	#		event.ignore()
-	#	else:
-	#		event.accept()
-	#	print '#', event.text(), '#', event.key(), '#', event.modifiers(), '#'
 
 	def init_menu(self):
 		self.act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
@@ -317,20 +305,20 @@ class UFPARead(QtGui.QMainWindow):
 	
 		toolbar = self.addToolBar(self.tb)
 
-	def remove_data(self):
-		state_path = os.path.join(info.ROOT_DIR_PATH, u'Estado do ' + self.state)
+	#def remove_data(self):
+	#	state_path = os.path.join(info.ROOT_DIR_PATH, u'Estado do ' + self.state)
 
-		# remove user dir (rm -rf)
-		shutil.rmtree(os.path.join(state_path, self.school,
-					self.name.split()[0].lower() + self.uid))
+	#	# remove user dir (rm -rf)
+	#	shutil.rmtree(os.path.join(state_path, self.school,
+	#				self.name.split()[0].lower() + self.uid))
 
-		# remove school dir, if empty (rmdir)
-		if os.listdir(os.path.join(state_path, self.school)) == []:
-			os.rmdir(os.path.join(state_path, self.school))
+	#	# remove school dir, if empty (rmdir)
+	#	if os.listdir(os.path.join(state_path, self.school)) == []:
+	#		os.rmdir(os.path.join(state_path, self.school))
 
-		# remove state dir, if empty (rmdir)
-		if os.listdir(state_path) == []:
-			 os.rmdir(state_path)
+	#	# remove state dir, if empty (rmdir)
+	#	if os.listdir(state_path) == []:
+	#		 os.rmdir(state_path)
 
 	def closeEvent(self, event):
 		if self.finished:
@@ -437,8 +425,6 @@ class UFPARead(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			self.sb.showMessage(u'.')
-
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -461,8 +447,6 @@ class UFPARead(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			self.sb.showMessage(u'..')
-
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -484,8 +468,6 @@ class UFPARead(QtGui.QMainWindow):
 			color.setColor(QtGui.QPalette.Button, QtCore.Qt.green)
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
-
-			self.sb.showMessage(u'...')
 
 			self.bred.update()
 			self.byellow.update()
@@ -582,8 +564,8 @@ class UFPARead(QtGui.QMainWindow):
 						info.SRC_DIR_PATH, 'images', 'ear.png')))
 			self.repeat_button.setIconSize(QtCore.QSize(75,75))
 			self.repeat_button.setEnabled(True)
-			self.repeat_button.setStatusTip(u'Iniciar o módulo de repetição')
-			self.repeat_button.setToolTip(u'Iniciar repetição')
+			self.repeat_button.setStatusTip(u'Iniciar o módulo "Ouvir e Repetir"')
+			self.repeat_button.setToolTip(u'Iniciar o módulo "Ouvir e Repetir"')
 		elif act == '_error':
 			self.finished = True
 			self.recording = False
@@ -955,6 +937,32 @@ class UFPARead(QtGui.QMainWindow):
 		self.thread.recording = False
 		self.block_mic = True
 
+	def repeat_module(self):
+		if self.thread is not None:
+			self.thread.i = 5000
+			self.recording = False
+			self.thread.paused = False
+			self.thread.recording = False
+			self.block_mic = False
+			self.paused = False
+
+		os.chdir(os.pardir)
+		# ROOT/src/state/city/school/group/firstname_uid/repetição
+		if not os.path.exists(u'repetição'):
+			os.mkdir(u'repetição')
+		else:
+			pass #overwrite audios from the previous applied repeating mod
+		os.chdir(u'repetição')
+
+		self.rep = UFPARepeat(self.parent)
+		self.rep.closed.connect(self.parent.show)
+		self.rep.move(230,30) # try to centralize
+		self.rep.setMinimumSize(900, 520) # define initial size
+		self.rep.setWindowTitle(info.TITLE)
+		self.rep.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.rep.show()
+		self.hide()
 
 class LogBuffer(QtCore.QObject, StringIO.StringIO):
 
@@ -988,9 +996,6 @@ class LogThread(QtCore.QThread):
 
 	def wnext(self):
 		self.i += 1
-
-	#def wprev(self):
-	#	self.i -= 1
 
 	def get_wlist(self):
 		return [ 'VIDA', 'TUBO', 'FALE', 'MINA', 'JUBA', 'PAGA', 'CAMA',\

@@ -615,8 +615,8 @@ class UFPARegister(QtGui.QMainWindow):
 
 				self.logger.debug(u'Iniciando o módulo de leitura.')
 
-				self.rec = UFPARead(self,
-							self.state, self.school, self.student, self.uid)
+				self.rec = UFPARead(self)
+							#self.state, self.school, self.student, self.uid)
 				self.rec.closed.connect(self.show)
 				self.rec.move(230,30) # try to centralize
 				self.rec.setMinimumSize(900, 700) # define initial size
@@ -634,8 +634,9 @@ class UFPARegister(QtGui.QMainWindow):
 
 				self.logger.debug(u'Iniciando o módulo de repetição.')
 
-				self.rep = UFPARepeat(self,
-							self.state, self.school, self.student, self.uid)
+				#self.rep = UFPARepeat(self,
+				#			self.state, self.school, self.student, self.uid)
+				self.rep = UFPARepeat(self)
 				self.rep.closed.connect(self.show)
 				self.rep.move(230,30) # try to centralize
 				self.rep.setMinimumSize(900, 520) # define initial size
@@ -645,7 +646,15 @@ class UFPARegister(QtGui.QMainWindow):
 				self.rep.show()
 			self.hide()
 
-	def clear(self):
+	def clear(self, force=True):
+		if not force:
+			reply = QtGui.QMessageBox.warning(self, u'Limpar campos de registro', 
+						u'Todos os dados preenchidos serão apagados.\n',
+						QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+
+			if reply == QtGui.QMessageBox.Cancel:
+				return
+
 		self.applier.setEnabled(True)
 		self.group.setEnabled(True)
 		self.school.setEnabled(True)
