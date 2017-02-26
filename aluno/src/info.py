@@ -4,13 +4,13 @@
 #
 # UFPA Speech Recorder
 #
-# Copyright 2017: PPGCC UFPA
+# Copyright 2017:
+# Grupo Falabrasil
 # Programa de Pós-Graduação em Ciência da Computação
 # Universidade Federal do Pará
 #
 # Author Jan 2017:
 # Cassio Trindade Batista  - cassio.batista.13@gmail.com
-# Nelson Cruz Sampaio Neto - dnelsonneto@gmail.com
 #
 # Last edited on February, 2017
 
@@ -22,8 +22,6 @@ import logging
 
 DEBUG = False
 
-LOGFILE = u'ufpalog.log'
-
 SYS_OS = platform.system().lower()
 SYS_HOME_PATH = 'HOMEPATH' if SYS_OS == 'windows' else 'HOME'
 
@@ -31,6 +29,8 @@ SRC_DIR_PATH  = unicode(str(os.path.abspath(os.path.dirname(
 			os.path.realpath(__file__)))), 'utf-8')
 ROOT_DIR_PATH = unicode(str(os.path.abspath(os.path.join(
 			SRC_DIR_PATH, os.pardir))), 'utf-8')
+
+LOGFILE = os.path.join(ROOT_DIR_PATH, 'ufpalog.log')
 
 MAIL = {'cassio':u'cassio.batista.13@gmail.com',
 		'nelson':u'dnelsonneto@gmail.com'}

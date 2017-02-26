@@ -4,13 +4,15 @@
 #
 # UFPA Speech Recorder
 #
-# Copyright 2017: PPGCC UFPA
+# Copyright 2017:
+# Grupo Falabrasil
 # Programa de Pós-Graduação em Ciência da Computação
 # Universidade Federal do Pará
 #
 # Author Feb 2017:
 # Cassio Trindade Batista - cassio.batista.13@gmail.com
-# Nelson C. Sampaio Neto  - dnelsonneto@gmail.com
+#
+# Last edited on February, 2017
 
 
 import sys

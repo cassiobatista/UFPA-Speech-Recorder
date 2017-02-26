@@ -4,14 +4,15 @@
 #
 # UFPA Speech Recorder
 #
-# Copyright 2017: PPGCC UFPA
+# Copyright 2017: 
+# Grupo Falabrasil
 # Programa de Pós-Graduação em Ciência da Computação
 # Universidade Federal do Pará
 #
 # Author Jan 2017:
 # Cassio Trindade Batista - cassio.batista.13@gmail.com
-# Nelson C. Sampaio Neto  - dnelsonneto@gmail.com
-
+#
+# Last edited on February, 2017
 
 import os
 import sys
@@ -27,6 +28,7 @@ from datetime import datetime
 
 import info
 from ufparead import UFPARead
+from ufparepeat import UFPARepeat
 from ufpatools import UFPAZip, UFPAUpload
 
 
@@ -631,13 +633,12 @@ class UFPARegister(QtGui.QMainWindow):
 				os.chdir(u'repetição')
 
 				self.logger.debug(u'Iniciando o módulo de repetição.')
-				return
 
 				self.rep = UFPARepeat(self,
 							self.state, self.school, self.student, self.uid)
 				self.rep.closed.connect(self.show)
 				self.rep.move(230,30) # try to centralize
-				self.rep.setMinimumSize(900, 700) # define initial size
+				self.rep.setMinimumSize(900, 520) # define initial size
 				self.rep.setWindowTitle(info.TITLE)
 				self.rep.setWindowIcon(QtGui.QIcon(os.path.join(
 							info.SRC_DIR_PATH, 'images', 'ufpa.png')))

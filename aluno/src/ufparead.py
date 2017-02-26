@@ -4,13 +4,15 @@
 #
 # UFPA Speech Recorder
 #
-# Copyright 2017: PPGCC UFPA
+# Copyright 2017:
+# Grupo Falabrasil
 # Programa de Pós-Graduação em Ciência da Computação
 # Universidade Federal do Pará
 #
-# Authors Jan 2017:
+# Author Jan 2017:
 # Cassio Trindade Batista - cassio.batista.13@gmail.com
-# Nelson C. Sampaio Neto  - dnelsonneto@gmail.com
+#
+# Last edited on February, 2017
 
 # References:
 # [1] http://stackoverflow.com/questions/892199/detect-record-audio-in-python
@@ -789,8 +791,6 @@ class UFPARead(QtGui.QMainWindow):
 
 			self.next_button.setStyleSheet('QPushButton:pressed' + 
 						'{border: none; outline: none;}')
-
-			self.finished = False
 		elif not self.paused and self.recording: # pause recording
 			self.thread.paused = True
 
