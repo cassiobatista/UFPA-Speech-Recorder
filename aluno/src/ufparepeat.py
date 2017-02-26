@@ -213,7 +213,7 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.next_button = QtGui.QPushButton()
 		self.next_button.setIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'next.png')))
-		self.next_button.setIconSize(QtCore.QSize(65,65))
+		self.next_button.setIconSize(QtCore.QSize(60,60))
 		#self.next_button.setStatusTip(u'Passar para a próxima palavra')
 		self.next_button.setToolTip(u'Próxima palavra')
 		self.next_button.setMinimumSize(90,90)
@@ -531,7 +531,6 @@ class UFPARepeat(QtGui.QMainWindow):
 			self.bgreen.setAutoFillBackground(True)
 			self.bgreen.setPalette(color)
 
-			print '\tesverdeou'
 			self.bred.update()
 			self.byellow.update()
 			self.bgreen.update()
@@ -539,7 +538,6 @@ class UFPARepeat(QtGui.QMainWindow):
 			self.paused = False
 			self.block_mic = False
 		else:
-			print '\t no else amarelou'
 			self.block_mic = True
 			self.rec2f = threading.Thread(target=self.record_to_file)
 			self.rec2f.start()
@@ -621,61 +619,62 @@ class UFPARepeat(QtGui.QMainWindow):
 	def start_rec(self):
 		if not self.recording and self.paused: # record!
 			self.block_mic = True
-
 			self.recording = True
+			self.paused = False
+
+			self.thread.paused = False
+			self.thread.blocked = False
+
+			self.sb.showMessage(u'')
 
 			self.rec_button.setIcon(QtGui.QIcon(
 						os.path.join(info.SRC_DIR_PATH, 'images', 'pause.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
 
-			print '\tclickei rec'
-			logging.info('_green')
 			self.next_button.setEnabled(False)
 		elif not self.paused and self.recording: # pause
 			self.thread.paused = True
 			self.paused = True
 			self.thread.recording = False
+			self.thread.blocked = False
 
-			print '\tno pause esperando a thread acabar'
 			if self.rec2f is not None:
-				self.rec2f.join()
+				if self.rec2f.is_alive():
+					self.rec2f.join()
 				self.rec2f = None
-			print '\tno pause cabo a thread'
 
 			self.rec_button.setIcon(QtGui.QIcon(
 						os.path.join(info.SRC_DIR_PATH, 'images', 'resume.png')))
 			self.rec_button.setIconSize(QtCore.QSize(80,80))
 			self.rec_button.setEnabled(False)
 
-			print '\tno pause esperando o mic ficar unready'
+			self.sb.showMessage(u'')
 			while self.mic_ready:
 				pass
-			print '\tno pause mic not ready!!!'
 
 			self.rec_button.setEnabled(True)
 			self.next_button.setEnabled(True)
 		elif self.paused and self.recording: # resume
-			self.block_mic = True
-
+			self.recording = False
 			self.thread.paused = False
 			self.thread.recording = False
+			self.thread.blocked = False
 
-			self.rec_button.setIcon(QtGui.QIcon(
-						os.path.join(info.SRC_DIR_PATH, 'images', 'pause.png')))
-			self.rec_button.setIconSize(QtCore.QSize(80,80))
-
-			print '\tno resume esperando o mic ficar unready'
 			while self.mic_ready:
 				pass
-			print '\t', self.mic_ready
-			print '\tno resume mic not ready!!!'
+
+			self.rec_button.setIcon(QtGui.QIcon(
+						os.path.join(info.SRC_DIR_PATH, 'images', 'rec.png')))
+			self.rec_button.setIconSize(QtCore.QSize(80,80))
+
 
 			self.next_button.setEnabled(False)
-			logging.info('_green')
 
 	def wnext(self):
 		self.block_mic = True
 		self.thread.wnext()
+
+		self.thread.paused = False
 
 		self.rec_button.setIcon(QtGui.QIcon(
 					os.path.join(info.SRC_DIR_PATH, 'images', 'rec.png')))
@@ -687,9 +686,6 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.paused = True
 		self.recording = False
 
-		self.thread.paused = False
-
-		print 'clickei next'
 		self.rec_button.setEnabled(True)
 		self.next_button.setEnabled(False)
 
@@ -718,19 +714,16 @@ class UFPARepeat(QtGui.QMainWindow):
 
 		self.mic_ready = True
 
-		print '\tno record mic is already ready'
 		# wait for GUI
 		if self.block_mic:
 			self.pause_rec(stream)
 
-		#if stream.is_stopped():
-		#	stream.start_stream()
-
 		# record!
 		r = array('h')
-		while not self.paused:
+		while self.thread.recording:
 			if self.paused:
-				self.pause_rec(stream)
+				break
+				#self.pause_rec(stream)
 
 			snd_data = array('h', stream.read(self.CHUNK_SIZE))
 			r.extend(snd_data)
@@ -780,6 +773,7 @@ class LogBuffer(QtCore.QObject, StringIO.StringIO):
 
 class LogThread(QtCore.QThread):
 
+	blocked = False
 	recording = False
 	paused = False
 	error = False
@@ -809,7 +803,6 @@ class LogThread(QtCore.QThread):
 				self.wordlist = f.read().splitlines()
 
 		while self.i < len(self.wordlist):
-			print self.recording, self.paused
 			if self.paused:
 				logging.info('_gray')
 				while self.paused:
@@ -819,10 +812,17 @@ class LogThread(QtCore.QThread):
 			try:
 				logging.info(unicode(self.wordlist[self.i],'utf-8'))
 				self.recording = True
+				self.blocked = True
 			except UnicodeError:
 				print u'A codificação do arquivo txt ou da palavra não é UTF-8'
 				self.error = True
 				break
+
+			while self.blocked:
+				pass
+
+			if not self.paused:
+				logging.info('_green')
 
 			while self.recording:
 				pass
