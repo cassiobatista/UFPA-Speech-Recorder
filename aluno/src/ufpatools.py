@@ -338,23 +338,11 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		try:
 			import pyqtgraph as pg
 		except ImportError:
-			print u'PyQtGraph não instalado.'
-			try:
-				import pip
-				pip.main(['install','pyqtgraph'])
-			except:
-				print u'O pacote pip falou ao tentar instalar a biblioteca.'
-				url = 'http://www.pyqtgraph.org/'
-				QtGui.QMessageBox.critical(self, u'Dependências não encontradas.',
-							u'A análise depende da biblioteca PyQtGraph.' +
-							u'<br>' +
-							u'Infelizmente, o download automático falhou.' +
-							u'<br>' +
-							u'No entanto, você pode baixar pelo link abaixo:'
-							u'<br>' +
-							u'<a href={0}>{0}</a>'.format(url) + 
-							u'<br>')
-				self.close()
+			logger.error(u'PyQtGraph não estás instalado.')
+			QtGui.QMessageBox.critical(self, u'PyQtGraph não instalado.',
+						u'A dependência <b>PyQtGraph</b> não está instalada.' +
+						u'<br>')
+			self.close()
 
 		self.wavfiles = QtGui.QComboBox()
 		self.wavfiles.addItem(u'')
@@ -477,7 +465,7 @@ class UFPAPlotWave(QtGui.QMainWindow):
 			return
 
 		import wave, struct
-		import pyqtgraph as pg
+		from pyqtgraph import LinearRegionItem
 		from pyaudio import paComplete, paContinue
 
 		self.wavfiles.setEnabled(False)
@@ -515,10 +503,10 @@ class UFPAPlotWave(QtGui.QMainWindow):
 			end = (times['Fim da fala']-times['Início da fala']).total_seconds()
 			end = end*22050 + begin
 
-			self.wavplot.addItem(pg.LinearRegionItem(
-						values=[0,begin], brush=(0,150,0,30), movable=True))
-			self.wavplot.addItem(pg.LinearRegionItem(
-						values=[begin,end], brush=(0,0,150,30), movable=True))
+			self.wavplot.addItem(LinearRegionItem(values=[0,begin],
+								brush=(0,150,0,30), movable=True))
+			self.wavplot.addItem(LinearRegionItem(values=[begin,end],
+								brush=(0,0,150,30), movable=True))
 
 		self.wavfiles.setEnabled(True)
 

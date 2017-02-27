@@ -46,6 +46,17 @@ except ImportError:
 		logger.error(u'PyAudio não pôde ser instalado. Problemas com o Pip.')
 		sys.exit()
 
+try:
+	import pyqtgraph
+except ImportError:
+	print u'Aviso: PyQtGraph não instalado.'
+	try:
+		logger.warning(u'PyQtGraph não instalado. Tentando instalá-lo...')
+		import pip
+		pip.main(['install', 'pyqtgraph'])
+	except:
+		logger.error(u'PyQtGraph não pôde ser instalado. Problemas com o Pip.')
+
 from ufpareg import UFPARegister
 
 if __name__ == '__main__':
