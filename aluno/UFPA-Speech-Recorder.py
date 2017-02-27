@@ -23,7 +23,6 @@ import sys
 sys.path.insert(0, 'src')
 
 import info
-from ufpareg import UFPARegister
 
 logger = info.get_logger()
 logger.info(u'Iniciando UFPA Speech Recorder ---------------------------------------------------')
@@ -47,6 +46,7 @@ except ImportError:
 		logger.error(u'PyAudio não pôde ser instalado. Problemas com o Pip.')
 		sys.exit()
 
+from ufpareg import UFPARegister
 
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
