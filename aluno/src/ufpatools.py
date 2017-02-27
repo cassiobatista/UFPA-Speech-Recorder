@@ -22,6 +22,10 @@ sys.setdefaultencoding('utf8')
 import os
 import info
 
+import time
+import threading
+from datetime import datetime
+
 from PyQt4 import QtCore, QtGui
 
 
@@ -322,6 +326,8 @@ class UFPAPlotWave(QtGui.QMainWindow):
 	closed = QtCore.pyqtSignal()
 	last_dir = info.ROOT_DIR_PATH
 
+	callback_flag = None
+
 	def __init__(self, parent=None):
 		super(UFPAPlotWave, self).__init__()
 		self.parent = parent
@@ -427,6 +433,39 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		toolbar = self.addToolBar('Standard')
 		toolbar.addAction(act_exit)
 
+	def closeEvent(self, event):
+		from pyaudio import paComplete
+
+		self.callback_flag = paComplete
+		time.sleep(.1)
+		event.accept()
+
+	# http://stackoverflow.com/questions/28417733/pyaudio-responsive-recording
+	def play(self, wav):
+		def callback(in_data, frame_count, time_info, status):
+			data = wav.readframes(frame_count)
+			return (data, self.callback_flag)
+
+		import pyaudio
+
+		p = pyaudio.PyAudio()
+
+		stream = p.open(output=True,
+					format=p.get_format_from_width(wav.getsampwidth()),
+					channels=wav.getnchannels(),
+					rate=wav.getframerate(),
+					stream_callback=callback)
+
+		stream.start_stream()
+
+		while stream.is_active():
+			time.sleep(.1)
+
+		stream.stop_stream()
+		stream.close()
+		wav.close()
+		p.terminate()
+
 	def plot(self):
 		wpath = unicode(self.wavdir.text().toUtf8(), 'utf-8')
 		wfile = unicode(self.wavfiles.currentText().toUtf8(),'utf-8').replace('.wav','')
@@ -439,13 +478,21 @@ class UFPAPlotWave(QtGui.QMainWindow):
 
 		import wave, struct
 		import pyqtgraph as pg
-		from datetime import datetime
+		from pyaudio import paComplete, paContinue
+
+		self.wavfiles.setEnabled(False)
+
+		self.callback_flag = paComplete
+		time.sleep(.1)
 
 		waveform = []
-		wav = wave.open(os.path.join(wpath, wfile + '.wav'), 'r')
+		wav = wave.open(os.path.join(wpath, wfile + '.wav'), 'rb')
 		for i in xrange(wav.getnframes()):
 			waveform.append( struct.unpack("<h", wav.readframes(1))[0] )
-		wav.close()
+		wav.rewind()
+
+		self.callback_flag = paContinue
+		threading.Thread(target=self.play, args=(wav,)).start()
 
 		with open(os.path.join(wpath, wfile + '.time.txt'), 'r') as txt:
 			params = txt.read().splitlines()
@@ -472,5 +519,7 @@ class UFPAPlotWave(QtGui.QMainWindow):
 						values=[0,begin], brush=(0,150,0,30), movable=True))
 			self.wavplot.addItem(pg.LinearRegionItem(
 						values=[begin,end], brush=(0,0,150,30), movable=True))
+
+		self.wavfiles.setEnabled(True)
 
 ### EOF ###

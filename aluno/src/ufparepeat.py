@@ -44,7 +44,7 @@ import struct
 from array import array
 
 import info
-from ufpatools import UFPAZip, UFPAUpload
+from ufpatools import UFPAZip, UFPAUpload, UFPAPlotWave
 
 class UFPARepeat(QtGui.QMainWindow):
 
@@ -77,6 +77,16 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.czip.setWindowIcon(QtGui.QIcon(os.path.join(
 					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 		self.czip.show()
+
+	def analise(self):
+		self.wav = UFPAPlotWave(self)
+		self.wav.closed.connect(self.show)
+		self.wav.move(100,30) # try to centralize
+		self.wav.setMinimumSize(1200, 600) # define initial size
+		self.wav.setWindowTitle(info.TITLE)
+		self.wav.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.wav.show()
 
 	#def __init__(self, parent, state, school, name, uid):
 	def __init__(self, parent=None):
@@ -285,12 +295,19 @@ class UFPARepeat(QtGui.QMainWindow):
 		self.sb = self.statusBar()
 		self.sb.setSizeGripEnabled(False)
 		#self.sb.setStyleSheet('QStatusBar {border: 0px;}')
+
+		act_analise = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'waveform.png')), u'&Analisar', self)
+		#act_analise.setStatusTip(u'Analisa os sinais de voz')
+		act_analise.setStatusTip(u'Analisar')
+		act_analise.triggered.connect(self.analise)
 		
 		self.tb = QtGui.QToolBar()
 		self.tb.addAction(self.act_exit)
 		self.tb.addAction(self.act_about)
 		self.tb.addAction(self.act_zip)
 		self.tb.addAction(self.act_add_new)
+		self.tb.addAction(act_analise)
 		self.tb.setStyleSheet('QToolBar:focus {border:none; outline:none;}')
 	
 		toolbar = self.addToolBar(self.tb)

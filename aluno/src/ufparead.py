@@ -46,7 +46,7 @@ from array import array
 from collections import deque
 
 import info
-from ufpatools import UFPAZip, UFPAUpload
+from ufpatools import UFPAZip, UFPAUpload, UFPAPlotWave
 from ufparepeat import UFPARepeat
 
 class UFPARead(QtGui.QMainWindow):
@@ -72,6 +72,16 @@ class UFPARead(QtGui.QMainWindow):
 	WINDOW_SIZE = 6
 
 	last_dir = info.ROOT_DIR_PATH
+
+	def analise(self):
+		self.wav = UFPAPlotWave(self)
+		self.wav.closed.connect(self.show)
+		self.wav.move(100,30) # try to centralize
+		self.wav.setMinimumSize(1200, 600) # define initial size
+		self.wav.setWindowTitle(info.TITLE)
+		self.wav.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.wav.show()
 
 	def compress(self):
 		self.czip = UFPAZip(self)
@@ -295,6 +305,12 @@ class UFPARead(QtGui.QMainWindow):
 		self.act_add_new.setToolTip(u'Novo registro')
 		self.act_add_new.triggered.connect(self.new_reg)
 
+		self.act_analise = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'waveform.png')), u'&Analisar', self)
+		self.act_analise.setStatusTip(u'Analisa os sinais de voz')
+		self.act_analise.triggered.connect(self.analise)
+
+
 		self.sb = self.statusBar()
 		self.sb.setSizeGripEnabled(False)
 		
@@ -303,6 +319,7 @@ class UFPARead(QtGui.QMainWindow):
 		self.tb.addAction(self.act_about)
 		self.tb.addAction(self.act_zip)
 		self.tb.addAction(self.act_add_new)
+		self.tb.addAction(self.act_analise)
 		self.tb.setStyleSheet('QToolBar:focus {border:none; outline:none;}')
 	
 		toolbar = self.addToolBar(self.tb)
