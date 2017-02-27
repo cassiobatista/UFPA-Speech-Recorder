@@ -326,6 +326,13 @@ class UFPARead(QtGui.QMainWindow):
 
 	def closeEvent(self, event):
 		if self.finished:
+			reply = QtGui.QMessageBox.warning(self, u'Cadastrar novo contato',
+						u'Você ainda não aplicou o módulo "Ouvir e Repetir".\n' + 
+						u'No entanto, você poderá realizá-lo posteriormente.\n\n' +
+						u'Gostaria de realizar um novo cadastro agora\n' + 
+						u'e deixar o módulo de repetição para depois?\n',
+						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+
 			QtGui.qApp.quit()
 		else:
 			reply = QtGui.QMessageBox.question(self, u'Fechar app', 
@@ -348,6 +355,13 @@ class UFPARead(QtGui.QMainWindow):
 
 	def quit_app(self):
 		if self.finished:
+			reply = QtGui.QMessageBox.warning(self, u'Cadastrar novo contato',
+						u'Você ainda não aplicou o módulo "Ouvir e Repetir".\n' + 
+						u'No entanto, você poderá realizá-lo posteriormente.\n\n' +
+						u'Gostaria de realizar um novo cadastro agora\n' + 
+						u'e deixar o módulo de repetição para depois?\n',
+						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+
 			QtGui.qApp.quit()
 		else:
 			reply = QtGui.QMessageBox.question(self, u'Fechar app', 
