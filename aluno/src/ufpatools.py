@@ -20,8 +20,6 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 import os
-import re
-import zipfile
 import info
 
 from PyQt4 import QtCore, QtGui
@@ -119,6 +117,21 @@ class UFPAZip(QtGui.QMainWindow):
 	# http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
 	def compress(self):
 		try:
+			import zipfile
+		except ImportError:
+			try:
+				import pip
+				pip.main(['install','czipfile'])
+			except:
+				print u'O pacote pip falou ao tentar instalar a biblioteca.'
+				QtGui.QMessageBox.critical(self, u'Dependências não encontradas.',
+							u'A compressão depende do módulo zipfile.' +
+							u'<br>' +
+							u'Infelizmente, o download automático falhou.' +
+							u'<br>')
+				self.close()
+
+		try:
 			import zlib
 			cmode = zipfile.ZIP_DEFLATED
 		except ImportError:
@@ -136,6 +149,7 @@ class UFPAZip(QtGui.QMainWindow):
 		basename = os.path.basename(dirname)
 
 		try:
+			import re
 			zf = zipfile.ZipFile(basename+'.zip', mode='w', compression=cmode)
 			for root, dirs, files in os.walk(dirname):
 				ziproot = re.sub('.*'+basename, basename, root)
@@ -299,5 +313,164 @@ class UFPAUpload(QtGui.QMainWindow):
 
 	def send_email(self):
 		pass
+
+# http://nullege.com/codes/search/PyQt5.QtWidgets.QComboBox.currentIndexChanged.connect
+# http://www.pyqtgraph.org/documentation/qtcrashcourse.html
+# http://stackoverflow.com/questions/2060628/reading-wav-files-in-python
+class UFPAPlotWave(QtGui.QMainWindow):
+
+	closed = QtCore.pyqtSignal()
+	last_dir = info.ROOT_DIR_PATH
+
+	def __init__(self, parent=None):
+		super(UFPAPlotWave, self).__init__()
+		self.parent = parent
+		self.init_main_screen()
+		self.init_menu()
+
+	def init_main_screen(self):
+		try:
+			import pyqtgraph as pg
+		except ImportError:
+			print u'PyQtGraph não instalado.'
+			try:
+				import pip
+				pip.main(['install','pyqtgraph'])
+			except:
+				print u'O pacote pip falou ao tentar instalar a biblioteca.'
+				url = 'http://www.pyqtgraph.org/'
+				QtGui.QMessageBox.critical(self, u'Dependências não encontradas.',
+							u'A análise depende da biblioteca PyQtGraph.' +
+							u'<br>' +
+							u'Infelizmente, o download automático falhou.' +
+							u'<br>' +
+							u'No entanto, você pode baixar pelo link abaixo:'
+							u'<br>' +
+							u'<a href={0}>{0}</a>'.format(url) + 
+							u'<br>')
+				self.close()
+
+		self.wavfiles = QtGui.QComboBox()
+		self.wavfiles.addItem(u'')
+		self.wavfiles.setMinimumWidth(50)
+		self.wavfiles.setEnabled(False)
+		self.wavfiles.currentIndexChanged.connect(self.plot)
+
+		self.wavdir = QtGui.QLineEdit(self)
+		self.wavdir.setReadOnly(True)
+
+		self.wavdir_button = QtGui.QPushButton(u'Procurar')
+		self.wavdir_button.setMinimumWidth(100)
+		self.wavdir_button.setStatusTip(u'Procurar pasta com arquivos de áudio')
+		self.wavdir_button.setToolTip(u'Procurar pasta com arquivos de áudio')
+		self.wavdir_button.clicked.connect(self.select_wavdir)
+
+		hb_wavdir = QtGui.QHBoxLayout()
+		hb_wavdir.addWidget(self.wavfiles)
+		hb_wavdir.addSpacing(20)
+		hb_wavdir.addWidget(self.wavdir)
+		hb_wavdir.addWidget(self.wavdir_button)
+		hb_wavdir.addSpacing(20)
+
+		gb_wavdir = QtGui.QGroupBox(u'Escolher uma pasta contendo arquivos *.wav')
+		gb_wavdir.setLayout(hb_wavdir)
+		## ---------------------
+
+		self.wavplot = pg.PlotWidget()
+
+		hb_wavplot = QtGui.QHBoxLayout()
+		hb_wavplot.addWidget(self.wavplot)
+
+		gb_wavplot = QtGui.QGroupBox()
+		gb_wavplot.setLayout(hb_wavplot)
+		# ---------------------
+
+		self.vb_layout_main = QtGui.QVBoxLayout()
+		self.vb_layout_main.addWidget(gb_wavdir)
+		self.vb_layout_main.addWidget(gb_wavplot)
+
+		wg_central = QtGui.QWidget()
+		wg_central.setLayout(self.vb_layout_main)
+
+		self.setCentralWidget(wg_central)
+
+		self.select_wavdir()
+
+	def select_wavdir(self):
+		dirname = QtGui.QFileDialog.getExistingDirectory(self,
+				u'Selecione a pasta contendo arquivos de áudio do tipo WAV', 
+				self.last_dir, QtGui.QFileDialog.ShowDirsOnly)
+
+		dirname = unicode(str(dirname.toUtf8()), 'utf-8')
+		if dirname == u'':
+			return
+
+		os.chdir(info.ROOT_DIR_PATH)
+		self.last_dir = dirname
+		self.wavdir.setText(dirname)
+
+		for wfile in os.listdir(dirname):
+			if '.wav' in wfile:
+				self.wavfiles.addItem(os.path.basename(wfile))
+
+		self.wavfiles.setEnabled(True)
+
+	def init_menu(self):
+		act_exit = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'x.png')), u'&Sair', self)
+		act_exit.setShortcut('Ctrl+Q')
+		act_exit.setStatusTip(u'Fechar janela de análises')
+		act_exit.triggered.connect(self.close)
+
+		self.statusBar()
+	
+		toolbar = self.addToolBar('Standard')
+		toolbar.addAction(act_exit)
+
+	def plot(self):
+		wpath = unicode(self.wavdir.text().toUtf8(), 'utf-8')
+		wfile = unicode(self.wavfiles.currentText().toUtf8(),'utf-8').replace('.wav','')
+
+		if wpath == u'' or wfile == u'':
+			QtGui.QMessageBox.warning(self, u'Erro ao plotar forma de onda',
+						u'Escolha uma pasta contendo áudios e, posteriormente,'+ 
+						u' um arquivo do tipo WAV para ser analisado.\n')
+			return
+
+		import wave, struct
+		import pyqtgraph as pg
+		from datetime import datetime
+
+		waveform = []
+		wav = wave.open(os.path.join(wpath, wfile + '.wav'), 'r')
+		for i in xrange(wav.getnframes()):
+			waveform.append( struct.unpack("<h", wav.readframes(1))[0] )
+		wav.close()
+
+		with open(os.path.join(wpath, wfile + '.time.txt'), 'r') as txt:
+			params = txt.read().splitlines()
+
+		times = {}
+		while len(params):
+			field, value = params.pop(0).split(': ')
+			if '--' in value:
+				times[field] = None
+			else:
+				times[field] = datetime.strptime(value, '%H:%M:%S.%f')
+
+		self.wavplot.clear()
+		self.wavplot.plot(waveform)
+
+		if times['Início da fala'] != None and times['Fim da fala'] != None:
+			begin = (times['Início da fala']-times['Start recording']).total_seconds()
+			begin = begin*22050 + 1024*9
+
+			end = (times['Fim da fala']-times['Início da fala']).total_seconds()
+			end = end*22050 + begin
+
+			self.wavplot.addItem(pg.LinearRegionItem(
+						values=[0,begin], brush=(0,150,0,30), movable=True))
+			self.wavplot.addItem(pg.LinearRegionItem(
+						values=[begin,end], brush=(0,0,150,30), movable=True))
 
 ### EOF ###

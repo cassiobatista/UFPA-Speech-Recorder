@@ -29,7 +29,7 @@ from datetime import datetime
 import info
 from ufparead import UFPARead
 from ufparepeat import UFPARepeat
-from ufpatools import UFPAZip, UFPAUpload
+from ufpatools import UFPAZip, UFPAUpload, UFPAPlotWave
 
 
 class UFPARegister(QtGui.QMainWindow):
@@ -63,6 +63,16 @@ class UFPARegister(QtGui.QMainWindow):
 	def config(self):
 		if os.path.exists(os.path.join(info.SRC_DIR_PATH, 'ufpasrconfig')):
 			pass
+
+	def analise(self):
+		self.wav = UFPAPlotWave(self)
+		self.wav.closed.connect(self.show)
+		self.wav.move(100,30) # try to centralize
+		self.wav.setMinimumSize(1200, 600) # define initial size
+		self.wav.setWindowTitle(info.TITLE)
+		self.wav.setWindowIcon(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'ufpa.png')))
+		self.wav.show()
 
 	def compress(self):
 		self.czip = UFPAZip(self)
@@ -371,6 +381,11 @@ class UFPARegister(QtGui.QMainWindow):
 		act_clean.setStatusTip(u'Restaura os campos da interface de cadastro')
 		act_clean.triggered.connect(self.clear)
 
+		act_analise = QtGui.QAction(QtGui.QIcon(os.path.join(
+					info.SRC_DIR_PATH, 'images', 'waveform.png')), u'&Analisar', self)
+		act_analise.setStatusTip(u'Analisa os sinais de voz')
+		act_analise.triggered.connect(self.analise)
+
 		self.statusBar()
 	
 		toolbar = self.addToolBar('Standard')
@@ -381,6 +396,7 @@ class UFPARegister(QtGui.QMainWindow):
 		toolbar.addAction(act_zip)
 		#toolbar.addAction(act_cloud)
 		toolbar.addAction(act_clean)
+		toolbar.addAction(act_analise)
 
 	def closeEvent(self, event):
 		applier = unicode(self.applier.text().toUtf8(), 'utf-8')
@@ -569,21 +585,6 @@ class UFPARegister(QtGui.QMainWindow):
 				os.mkdir(group)
 			os.chdir(group)
 
-			# not working on Windows
-			## ROOT/state/city/school/group/firstname_uid
-			#if not os.path.exists(student.split()[0].lower() + self.uid):
-			#	os.mkdir(student.split()[0].lower() + self.uid)
-			#else:
-			#	if self.regloaded:
-			#		newid = datetime.now().strftime('_%Y%m%d-%H%M%S') # def new uid
-			#		os.rename(student.split()[0].lower() + self.uid, 
-			#					student.split()[0].lower() + newid)
-			#		self.uid = newid 
-			#		self.logger.debug(u'Atualizando o ID')
-			#	else:
-			#		pass # this condition must never exist. Ever
-			#os.chdir(student.split()[0].lower() + self.uid)
-
 			# ROOT/state/city/school/group/firstname_uid
 			if not os.path.exists(student.split()[0].lower() + self.uid):
 				os.mkdir(student.split()[0].lower() + self.uid)
@@ -616,7 +617,6 @@ class UFPARegister(QtGui.QMainWindow):
 				self.logger.debug(u'Iniciando o módulo de leitura.')
 
 				self.rec = UFPARead(self)
-							#self.state, self.school, self.student, self.uid)
 				self.rec.closed.connect(self.show)
 				self.rec.move(230,30) # try to centralize
 				self.rec.setMinimumSize(900, 700) # define initial size
@@ -634,8 +634,6 @@ class UFPARegister(QtGui.QMainWindow):
 
 				self.logger.debug(u'Iniciando o módulo de repetição.')
 
-				#self.rep = UFPARepeat(self,
-				#			self.state, self.school, self.student, self.uid)
 				self.rep = UFPARepeat(self)
 				self.rep.closed.connect(self.show)
 				self.rep.move(230,30) # try to centralize
@@ -645,6 +643,21 @@ class UFPARegister(QtGui.QMainWindow):
 							info.SRC_DIR_PATH, 'images', 'ufpa.png')))
 				self.rep.show()
 			self.hide()
+
+	#def remove_data(self):
+	#	state_path = os.path.join(info.ROOT_DIR_PATH, u'Estado do ' + self.state)
+
+	#	# remove user dir (rm -rf)
+	#	shutil.rmtree(os.path.join(state_path, self.school,
+	#				self.name.split()[0].lower() + self.uid))
+
+	#	# remove school dir, if empty (rmdir)
+	#	if os.listdir(os.path.join(state_path, self.school)) == []:
+	#		os.rmdir(os.path.join(state_path, self.school))
+
+	#	# remove state dir, if empty (rmdir)
+	#	if os.listdir(state_path) == []:
+	#		 os.rmdir(state_path)
 
 	def clear(self, force=True):
 		if not force:

@@ -25,10 +25,12 @@
 
 
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import os
 import time
 import random
-import shutil
 
 from PyQt4 import QtCore, QtGui
 from datetime import datetime
@@ -304,21 +306,6 @@ class UFPARead(QtGui.QMainWindow):
 		self.tb.setStyleSheet('QToolBar:focus {border:none; outline:none;}')
 	
 		toolbar = self.addToolBar(self.tb)
-
-	#def remove_data(self):
-	#	state_path = os.path.join(info.ROOT_DIR_PATH, u'Estado do ' + self.state)
-
-	#	# remove user dir (rm -rf)
-	#	shutil.rmtree(os.path.join(state_path, self.school,
-	#				self.name.split()[0].lower() + self.uid))
-
-	#	# remove school dir, if empty (rmdir)
-	#	if os.listdir(os.path.join(state_path, self.school)) == []:
-	#		os.rmdir(os.path.join(state_path, self.school))
-
-	#	# remove state dir, if empty (rmdir)
-	#	if os.listdir(state_path) == []:
-	#		 os.rmdir(state_path)
 
 	def closeEvent(self, event):
 		if self.finished:
@@ -656,7 +643,7 @@ class UFPARead(QtGui.QMainWindow):
 			self.wshow.setText(act)
 
 			with open(act + '.time.txt', 'w') as f:
-				f.write(datetime.now().strftime('Exibição: %X:%f\n'))
+				f.write(datetime.now().strftime(u'Exibição: %H:%M:%S.%f\n'))
 
 			self.sb.showMessage(u':')
 
@@ -856,6 +843,8 @@ class UFPARead(QtGui.QMainWindow):
 
 		self.mic_ready = True
 
+		startrec = datetime.now()
+
 		speech = init_window(False, self.WINDOW_SIZE)
 		times  = init_window(None, self.WINDOW_SIZE)
 		started = None
@@ -898,17 +887,20 @@ class UFPARead(QtGui.QMainWindow):
 
 		if self.text is not None:
 			with open(self.text + '.time.txt', 'a') as f:
+				f.write(startrec.strftime(u'Start recording: %H:%M:%S.%f\n'))
+
+			with open(self.text + '.time.txt', 'a') as f:
 				if started is not None:
-					f.write(started.strftime(u'Início da fala: %X.%f\n'))
+					f.write(started.strftime(u'Início da fala: %H:%M:%S.%f\n'))
 				else:
 					f.write(u'Início da fala: -- \n')
 				if stopped is not None:
-					f.write(stopped.strftime(u'Fim da fala: %X.%f\n'))
+					f.write(stopped.strftime(u'Fim da fala: %H:%M:%S.%f\n'))
 				else:
 					f.write(u'Fim da fala: -- \n')
 
 			with open(self.text + '.time.txt', 'a') as f:
-				f.write(click_time.strftime(u'Ocultação: %X.%f\n'))
+				f.write(click_time.strftime(u'Ocultação: %H:%M:%S.%f\n'))
 
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
