@@ -726,6 +726,10 @@ class UFPARead(QtGui.QMainWindow):
 		self.txt_button.hide()
 		self.txt_check.hide()
 
+		self.wshow.setStatusTip(u'')
+		self.rec_button.setStatusTip(u'')
+		self.next_button.setStatusTip(u'')
+
 	def restore_gui(self):
 		self.rec_button.setStyleSheet('QPushButton:hover:!pressed' + 
 					'{background-color: black; border: 3px solid lightgray;}')
