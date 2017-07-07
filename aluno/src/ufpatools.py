@@ -338,7 +338,7 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		try:
 			import pyqtgraph as pg
 		except ImportError:
-			logger.error(u'PyQtGraph não estás instalado.')
+			print(u'PyQtGraph não estás instalado.')
 			QtGui.QMessageBox.critical(self, u'PyQtGraph não instalado.',
 						u'A dependência <b>PyQtGraph</b> não está instalada.' +
 						u'<br>')
@@ -370,7 +370,12 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		gb_wavdir.setLayout(hb_wavdir)
 		## ---------------------
 
-		self.wavplot = pg.PlotWidget()
+		self.wavplot = pg.PlotWidget(background='w')
+		#self.wavplot.showGrid(x=True, y=True, alpha=0.1)
+		self.wavplot.getAxis('bottom').setPen(pg.mkPen(color='k'))
+		self.wavplot.getAxis('top').setPen(pg.mkPen(color='k'))
+		self.wavplot.getAxis('left').setPen(pg.mkPen(color='k'))
+		self.wavplot.getAxis('right').setPen(pg.mkPen(color='k'))
 
 		hb_wavplot = QtGui.QHBoxLayout()
 		hb_wavplot.addWidget(self.wavplot)
@@ -432,6 +437,7 @@ class UFPAPlotWave(QtGui.QMainWindow):
 	def play(self, wav):
 		def callback(in_data, frame_count, time_info, status):
 			data = wav.readframes(frame_count)
+			#wav.tell()
 			return (data, self.callback_flag)
 
 		import pyaudio
@@ -455,17 +461,26 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		p.terminate()
 
 	def plot(self):
+		def is_time(string):
+			from dateutil.parser import parse
+			try:
+				parse(string)
+				return True
+			except ValueError:
+				return False
+
 		wpath = unicode(self.wavdir.text().toUtf8(), 'utf-8')
 		wfile = unicode(self.wavfiles.currentText().toUtf8(),'utf-8').replace('.wav','')
 
 		if wpath == u'' or wfile == u'':
+			self.wavplot.clear()
 			QtGui.QMessageBox.warning(self, u'Erro ao plotar forma de onda',
 						u'Escolha uma pasta contendo áudios e, posteriormente,'+ 
 						u' um arquivo do tipo WAV para ser analisado.\n')
 			return
 
 		import wave, struct
-		from pyqtgraph import LinearRegionItem
+		from pyqtgraph import LinearRegionItem, mkPen, TextItem
 		from pyaudio import paComplete, paContinue
 
 		self.wavfiles.setEnabled(False)
@@ -490,23 +505,48 @@ class UFPAPlotWave(QtGui.QMainWindow):
 			field, value = params.pop(0).split(': ')
 			if '--' in value:
 				times[field] = None
-			else:
+			elif is_time(value):
 				times[field] = datetime.strptime(value, '%H:%M:%S.%f')
+			else:
+				times[field] = value
 
 		self.wavplot.clear()
-		self.wavplot.plot(waveform)
+		self.wavplot.plot(waveform, pen=mkPen(color=(0,0,200,40)))
+
+		# https://stackoverflow.com/questions/38083066/how-to-set-tick-labels-in-python-pyqtgraph-plotwidget
+		ticks = []
+		for i in range(0, len(waveform), 22050/5):
+			ticks.append((i, i/float(22050)))
+		ticks.append( (len(waveform), round(len(waveform)/float(22050),1)) ) 
+
+		self.wavplot.getAxis('bottom').setTicks([ticks])
 
 		if times['Início da fala'] != None and times['Fim da fala'] != None:
-			begin = (times['Início da fala']-times['Start recording']).total_seconds()
-			begin = begin*22050 + 1024*9
+			begin = (times['Início da fala']-times['Início da gravação']).total_seconds()
+			begin_sample = begin*22050 + 1024*9
 
 			end = (times['Fim da fala']-times['Início da fala']).total_seconds()
-			end = end*22050 + begin
+			end_sample = end*22050 + begin_sample
 
-			self.wavplot.addItem(LinearRegionItem(values=[0,begin],
-								brush=(0,150,0,30), movable=True))
-			self.wavplot.addItem(LinearRegionItem(values=[begin,end],
-								brush=(0,0,150,30), movable=True))
+			label = TextItem(color='k',
+							text=u'Início da fala: %.4f seg. (amostra %s)\n' % \
+											(begin_sample/float(22050), times['Speech sample'])
+							   + u'   Fim da fala: %.4f seg. (amostra %s)' % 
+											(end_sample/float(22050), times['Endpoint sample']))
+			label.setPos(1000, max(waveform)/2)
+			self.wavplot.addItem(label)
+
+			self.wavplot.addItem(LinearRegionItem(
+						values=[begin_sample, end_sample],
+						brush=(0,200,0,40), movable=True))
+			self.wavplot.setStatusTip(u'Região da fala mostrada em verde. ' + 
+								u'Ajuste-a, caso necessário.')
+		else:
+			self.wavplot.addItem(LinearRegionItem(
+						values=[len(waveform)/4, len(waveform)-len(waveform)/4], 
+						brush=(200,0,0,40), movable=True))
+			self.wavplot.setStatusTip(u'O sistema de detecção de fala falhou. ' +
+								u'Por favor, ajuste a região em vermelho.')
 
 		self.wavfiles.setEnabled(True)
 

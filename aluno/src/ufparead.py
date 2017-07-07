@@ -674,7 +674,7 @@ class UFPARead(QtGui.QMainWindow):
 			self.wshow.setText(act)
 
 			with open(act + '.time.txt', 'w') as f:
-				f.write(datetime.now().strftime(u'Exibição: %H:%M:%S.%f\n'))
+				f.write(datetime.now().strftime(u'Exibição da palavra: %H:%M:%S.%f\n'))
 
 			self.sb.showMessage(u':')
 
@@ -872,9 +872,9 @@ class UFPARead(QtGui.QMainWindow):
 			initial_silence.append(max(snd_data))
 			i += 1
 
-		if int(max(initial_silence)) > self.THRESHOLD:
-			self.THRESHOLD = int(max(initial_silence)) 
-		del(initial_silence)
+		#if int(max(initial_silence)) > self.THRESHOLD:
+		#	self.THRESHOLD = int(max(initial_silence)) 
+		#del(initial_silence)
 
 		self.mic_ready = True
 
@@ -922,7 +922,7 @@ class UFPARead(QtGui.QMainWindow):
 
 		if self.text is not None:
 			with open(self.text + '.time.txt', 'a') as f:
-				f.write(startrec.strftime(u'Start recording: %H:%M:%S.%f\n'))
+				f.write(startrec.strftime(u'Início da gravação: %H:%M:%S.%f\n'))
 
 			with open(self.text + '.time.txt', 'a') as f:
 				if started is not None:
@@ -935,7 +935,17 @@ class UFPARead(QtGui.QMainWindow):
 					f.write(u'Fim da fala: -- \n')
 
 			with open(self.text + '.time.txt', 'a') as f:
-				f.write(click_time.strftime(u'Ocultação: %H:%M:%S.%f\n'))
+				f.write(click_time.strftime(u'Ocultação da palavra: %H:%M:%S.%f\n'))
+
+			begin = (started-startrec).total_seconds()
+			begin_sample = begin*22050 + 1024*9
+
+			end = (stopped-started).total_seconds()
+			end_sample = end*22050 + begin_sample
+
+			with open(self.text + '.time.txt', 'a') as f:
+				f.write('Speech sample: %d\n' % begin_sample)
+				f.write('Endpoint sample: %d\n' % end_sample)
 
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
