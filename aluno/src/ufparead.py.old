@@ -847,6 +847,9 @@ class UFPARead(QtGui.QMainWindow):
 		as an array of signed shorts.
 		"""
 
+		def init_window(val, maxl):
+			return deque([val], maxlen=maxl) 
+
 		p = pyaudio.PyAudio()
 		stream = p.open(input=True, 
 					format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
@@ -856,18 +859,66 @@ class UFPARead(QtGui.QMainWindow):
 		if self.block_mic:
 			self.pause_rec(stream)
 	
+		# Estimate initial silence
+		i = 0
+		r = array('h')
+		initial_silence = []
+		while i < 10:
+			if self.paused: # paused: wait for resume button
+				self.pause_rec(stream)
+
+			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			r.extend(snd_data)
+			initial_silence.append(max(snd_data))
+			i += 1
+
+		#if int(max(initial_silence)) > self.THRESHOLD:
+		#	self.THRESHOLD = int(max(initial_silence)) 
+		#del(initial_silence)
+
 		self.mic_ready = True
+
 		startrec = datetime.now()
 
-		r = array('h')
+		speech = init_window(False, self.WINDOW_SIZE)
+		times  = init_window(None, self.WINDOW_SIZE)
+		started = None
 		while self.thread.recording:
 			if self.paused:
 				self.pause_rec(stream)
 
 			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			times.append(datetime.now())
 			r.extend(snd_data)
 	
+			voiced = (int(max(snd_data)) > self.THRESHOLD)
+			speech.append(voiced)
+	
+			if all(speech):
+				started = times.popleft()
+				break
+
+		silence = init_window(False, self.WINDOW_SIZE)
+		times   = init_window(None,  self.WINDOW_SIZE)
+		detected = False
+		stopped = None
+		while self.thread.recording:
+			if self.paused:
+				self.pause_rec(stream)
+
+			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			times.append(datetime.now())
+			r.extend(snd_data)
+	
+			unvoiced = (int(max(snd_data)) < self.THRESHOLD)
+			silence.append(unvoiced)
+	
+			if not detected and all(silence):
+				detected = True
+				stopped = times.popleft()
+
 		click_time = datetime.now()
+		del(speech, silence, times)
 
 		if self.text is not None:
 			with open(self.text + '.time.txt', 'a') as f:
