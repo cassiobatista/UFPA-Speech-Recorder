@@ -328,6 +328,10 @@ class UFPAPlotWave(QtGui.QMainWindow):
 
 	callback_flag = None
 
+	Fs = None # sampling frequency
+	Tr = None # reaction time
+	changed = True
+
 	def __init__(self, parent=None):
 		super(UFPAPlotWave, self).__init__()
 		self.parent = parent
@@ -346,9 +350,10 @@ class UFPAPlotWave(QtGui.QMainWindow):
 
 		self.wavfiles = QtGui.QComboBox()
 		self.wavfiles.addItem(u'')
-		self.wavfiles.setMinimumWidth(50)
+		self.wavfiles.setMinimumWidth(100)
 		self.wavfiles.setEnabled(False)
-		self.wavfiles.currentIndexChanged.connect(self.plot)
+		self.wavfiles.activated.connect(self.plot)
+		self.wavfiles.currentIndexChanged.connect(self.change_region)
 
 		self.wavdir = QtGui.QLineEdit(self)
 		self.wavdir.setReadOnly(True)
@@ -370,6 +375,15 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		gb_wavdir.setLayout(hb_wavdir)
 		## ---------------------
 
+		# https://pypkg.com/pypi/pyqtgraph-for-dubble-bubble/f/pyqtgraph/graphicsItems/InfiniteLine.py
+		self.linear_region = pg.LinearRegionItem(movable=True)
+		self.linear_region.sigRegionChanged.connect(self.edit_start)
+
+		self.follow_wav = pg.InfiniteLine(movable=True,
+					pen=(20,20,20), angle=90, label='{value:0.0f}',
+					labelOpts={'position':0.1, 'color':(20,20,20),
+								'fill':(20,20,20,50), 'movable': True})
+
 		self.wavplot = pg.PlotWidget(background='w')
 		#self.wavplot.showGrid(x=True, y=True, alpha=0.1)
 		self.wavplot.getAxis('bottom').setPen(pg.mkPen(color='k'))
@@ -384,9 +398,53 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		gb_wavplot.setLayout(hb_wavplot)
 		# ---------------------
 
+		self.reaction_time = QtGui.QLineEdit()
+		self.reaction_time.setFixedWidth(150)
+		self.reaction_time.setReadOnly(True)
+
+		self.start_speech = QtGui.QLineEdit()
+		self.start_speech.setFixedWidth(150)
+		self.start_speech.setReadOnly(True)
+
+		self.end_speech = QtGui.QLineEdit()
+		self.end_speech.setFixedWidth(150)
+		self.end_speech.setReadOnly(True)
+
+		self.duration_speech = QtGui.QLineEdit()
+		self.duration_speech.setFixedWidth(150)
+		self.duration_speech.setReadOnly(True)
+
+		self.edit_button = QtGui.QPushButton(u'Redefinir\nLimites')
+		self.edit_button.setMinimumWidth(150)
+		self.edit_button.setStatusTip(u'Editar limites do som vozeado')
+		self.edit_button.setToolTip(u'Editar limites do som vozeado')
+		self.edit_button.setEnabled(True)
+		self.edit_button.clicked.connect(self.edit_waveform)
+
+		hb_edit = QtGui.QHBoxLayout()
+		hb_edit.setAlignment(QtCore.Qt.AlignRight)
+		hb_edit.addWidget(QtGui.QLabel(u'Tempo de reação:'))
+		hb_edit.addWidget(self.reaction_time)
+		hb_edit.addSpacing(20)
+		hb_edit.addWidget(QtGui.QLabel(u'Início da fala:'))
+		hb_edit.addWidget(self.start_speech)
+		hb_edit.addSpacing(20)
+		hb_edit.addWidget(QtGui.QLabel(u'Final da fala:'))
+		hb_edit.addWidget(self.end_speech)
+		hb_edit.addSpacing(20)
+		hb_edit.addWidget(QtGui.QLabel(u'Duração:'))
+		hb_edit.addWidget(self.duration_speech)
+		hb_edit.addSpacing(50)
+		hb_edit.addWidget(self.edit_button)
+
+		gb_edit = QtGui.QGroupBox()
+		gb_edit.setLayout(hb_edit)
+		# ---------------------
+
 		self.vb_layout_main = QtGui.QVBoxLayout()
 		self.vb_layout_main.addWidget(gb_wavdir)
 		self.vb_layout_main.addWidget(gb_wavplot)
+		self.vb_layout_main.addWidget(gb_edit)
 
 		wg_central = QtGui.QWidget()
 		wg_central.setLayout(self.vb_layout_main)
@@ -394,6 +452,16 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		self.setCentralWidget(wg_central)
 
 		self.select_wavdir()
+
+	def edit_start(self):
+		start, end = self.linear_region.getRegion()
+
+		start = int(start)
+		end   = int(end)
+		self.reaction_time.setText(u'%.6f'        % (start/float(22050) + self.Tr))
+		self.start_speech.setText(u'%.4f (%d)'    % (start/float(22050), start))
+		self.end_speech.setText(u'%.4f (%d)'      % (end/float(22050), end))
+		self.duration_speech.setText(u'%.4f (%d)' % ((end-start)/float(22050), (end-start)))
 
 	def select_wavdir(self):
 		dirname = QtGui.QFileDialog.getExistingDirectory(self,
@@ -437,7 +505,7 @@ class UFPAPlotWave(QtGui.QMainWindow):
 	def play(self, wav):
 		def callback(in_data, frame_count, time_info, status):
 			data = wav.readframes(frame_count)
-			#wav.tell()
+			self.follow_wav.setPos([wav.tell(), 2])
 			return (data, self.callback_flag)
 
 		import pyaudio
@@ -460,15 +528,10 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		wav.close()
 		p.terminate()
 
-	def plot(self):
-		def is_time(string):
-			from dateutil.parser import parse
-			try:
-				parse(string)
-				return True
-			except ValueError:
-				return False
+	def change_region(self):
+		self.changed = True
 
+	def plot(self):
 		wpath = unicode(self.wavdir.text().toUtf8(), 'utf-8')
 		wfile = unicode(self.wavfiles.currentText().toUtf8(),'utf-8').replace('.wav','')
 
@@ -480,7 +543,7 @@ class UFPAPlotWave(QtGui.QMainWindow):
 			return
 
 		import wave, struct
-		from pyqtgraph import LinearRegionItem, mkPen, TextItem
+		from pyqtgraph import mkPen
 		from pyaudio import paComplete, paContinue
 
 		self.wavfiles.setEnabled(False)
@@ -503,51 +566,94 @@ class UFPAPlotWave(QtGui.QMainWindow):
 		times = {}
 		while len(params):
 			field, value = params.pop(0).split(': ')
-			if '--' in value:
-				times[field] = None
-			elif is_time(value):
+			try:
 				times[field] = datetime.strptime(value, '%H:%M:%S.%f')
-			else:
+			except ValueError:
 				times[field] = value
+
+		self.Tr = (times['Exibição da palavra']-times['Início da gravação']).total_seconds()
 
 		self.wavplot.clear()
 		self.wavplot.plot(waveform, pen=mkPen(color=(0,0,200,40)))
 
+		self.Fs = float(wav.getframerate()) # sample rate
+
 		# https://stackoverflow.com/questions/38083066/how-to-set-tick-labels-in-python-pyqtgraph-plotwidget
 		ticks = []
-		for i in range(0, len(waveform), 22050/5):
-			ticks.append((i, i/float(22050)))
-		ticks.append( (len(waveform), round(len(waveform)/float(22050),1)) ) 
+		for i in range(0, wav.getnframes(), int(self.Fs)/5):
+			ticks.append((i, i/self.Fs))
+		ticks.append( (wav.getnframes(), round(wav.getnframes()/self.Fs,1)) ) 
 
 		self.wavplot.getAxis('bottom').setTicks([ticks])
 
-		if times['Início da fala'] != None and times['Fim da fala'] != None:
-			begin = (times['Início da fala']-times['Início da gravação']).total_seconds()
-			begin_sample = begin*22050 + 1024*9
-
-			end = (times['Fim da fala']-times['Início da fala']).total_seconds()
-			end_sample = end*22050 + begin_sample
-
-			label = TextItem(color='k',
-							text=u'Início da fala: %.4f seg. (amostra %s)\n' % \
-											(begin_sample/float(22050), times['Speech sample'])
-							   + u'   Fim da fala: %.4f seg. (amostra %s)' % 
-											(end_sample/float(22050), times['Endpoint sample']))
-			label.setPos(1000, max(waveform)/2)
-			self.wavplot.addItem(label)
-
-			self.wavplot.addItem(LinearRegionItem(
-						values=[begin_sample, end_sample],
-						brush=(0,200,0,40), movable=True))
-			self.wavplot.setStatusTip(u'Região da fala mostrada em verde. ' + 
-								u'Ajuste-a, caso necessário.')
+		if times['Tempo de reação'] == '0.0':
+			brush_color = (200, 0, 0, 40)
+			self.wavplot.setStatusTip(u'Por favor, ajuste a região em vermelho.')
 		else:
-			self.wavplot.addItem(LinearRegionItem(
-						values=[len(waveform)/4, len(waveform)-len(waveform)/4], 
-						brush=(200,0,0,40), movable=True))
-			self.wavplot.setStatusTip(u'O sistema de detecção de fala falhou. ' +
-								u'Por favor, ajuste a região em vermelho.')
+			brush_color = (0, 200, 0, 40)
+			self.wavplot.setStatusTip(u'Região da fala mostrada em verde. ' + 
+							u'Ajuste-a, caso necessário.')
+			self.duration_speech.setText(times['Duração'])
+
+		start_sample = int(times['Silêncio inicial'])
+		end_sample   = int(times['Silêncio final'])
+
+		self.wavplot.removeItem(self.linear_region)
+		if self.changed:
+			self.linear_region.setBrush(brush_color)
+			self.linear_region.setRegion([start_sample, end_sample])
+			self.changed = False
+		self.wavplot.addItem(self.linear_region)
+
+		self.wavplot.addItem(self.follow_wav)
 
 		self.wavfiles.setEnabled(True)
+
+	def edit_waveform(self):
+		wpath = unicode(self.wavdir.text().toUtf8(), 'utf-8')
+		wfile = unicode(self.wavfiles.currentText().toUtf8(),'utf-8').replace('.wav','')
+
+		# read parameters from txt file
+		with open(os.path.join(wpath, wfile + '.time.txt'), 'r') as txt:
+			params = txt.read().splitlines()
+
+		# split parameters
+		times = {}
+		while len(params):
+			field, value = params.pop(0).split(': ')
+			try:
+				times[field] = datetime.strptime(value, '%H:%M:%S.%f')
+			except ValueError:
+				times[field] = value
+
+		tr = self.reaction_time.text().toUtf8()
+		startpoint = self.start_speech.text().split(' ')[1]\
+							.replace('(','').replace(')','').toUtf8()
+		endpoint = self.end_speech.text().split(' ')[1]\
+							.replace('(','').replace(')','').toUtf8()
+		duration = self.duration_speech.text().split(' ')[0].toUtf8()
+
+		# write parameters to txt file again
+		with open(os.path.join(wpath, wfile + '.time.txt'), 'w') as txt:
+			txt.write(times['Exibição da palavra'].strftime(
+						   u'Exibição da palavra: %H:%M:%S.%f\n'))
+			txt.write(times['Início da gravação'].strftime(
+						   u'Início da gravação: %H:%M:%S.%f\n'))
+			txt.write('Silêncio inicial: %s\n' % startpoint) # edited
+			txt.write('Silêncio final: %s\n'   % endpoint)   # edited
+			txt.write(times['Ocultação da palavra'].strftime(
+						   u'Ocultação da palavra: %H:%M:%S.%f\n'))
+			txt.write('Tempo de reação: %s\n' % tr)        # edited
+			txt.write('Duração: %s\n'         % duration)  # edited
+
+		self.wavplot.removeItem(self.linear_region)
+		self.linear_region.setBrush((0,200,0,40))
+		self.wavplot.addItem(self.linear_region)
+
+		QtGui.QMessageBox.information(self, u'Sucesso',
+					u'Região vozeada redefinida com sucesso!<br>' + 
+					u'Os parâmetros atualizados encontram-se no arquivo ' + 
+					u'<b>%s.time.txt</b><br>' % os.path.join(wpath, wfile))
+		return
 
 ### EOF ###

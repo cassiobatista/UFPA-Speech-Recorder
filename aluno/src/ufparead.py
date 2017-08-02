@@ -864,7 +864,7 @@ class UFPARead(QtGui.QMainWindow):
 			if self.paused:
 				self.pause_rec(stream)
 
-			snd_data = array('h', stream.read(self.CHUNK_SIZE))
+			snd_data = array('h', stream.read(self.CHUNK_SIZE)) # read from mic
 			r.extend(snd_data)
 	
 		click_time = datetime.now()
@@ -872,29 +872,11 @@ class UFPARead(QtGui.QMainWindow):
 		if self.text is not None:
 			with open(self.text + '.time.txt', 'a') as f:
 				f.write(startrec.strftime(u'Início da gravação: %H:%M:%S.%f\n'))
-
-			with open(self.text + '.time.txt', 'a') as f:
-				if started is not None:
-					f.write(started.strftime(u'Início da fala: %H:%M:%S.%f\n'))
-				else:
-					f.write(u'Início da fala: -- \n')
-				if stopped is not None:
-					f.write(stopped.strftime(u'Fim da fala: %H:%M:%S.%f\n'))
-				else:
-					f.write(u'Fim da fala: -- \n')
-
-			with open(self.text + '.time.txt', 'a') as f:
+				f.write('Silêncio inicial: %d\n' % (1*len(r)/4)) # 25% (estimation)
+				f.write('Silêncio final: %d\n'   % (3*len(r)/4)) # 75% (estimation)
 				f.write(click_time.strftime(u'Ocultação da palavra: %H:%M:%S.%f\n'))
-
-			begin = (started-startrec).total_seconds()
-			begin_sample = begin*22050 + 1024*9
-
-			end = (stopped-started).total_seconds()
-			end_sample = end*22050 + begin_sample
-
-			with open(self.text + '.time.txt', 'a') as f:
-				f.write('Speech sample: %d\n' % begin_sample)
-				f.write('Endpoint sample: %d\n' % end_sample)
+				f.write('Tempo de reação: 0.0\n')
+				f.write('Duração: 0.0\n')
 
 		sample_width = p.get_sample_size(self.FORMAT)
 		stream.stop_stream()
