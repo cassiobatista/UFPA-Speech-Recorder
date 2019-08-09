@@ -25,7 +25,7 @@ Dois cliques sobre o arquivo "UFPA-Speech-Recorder"
 
 ## Linux
 
-# Dependências:
+### Dependências:
 1) Python 2.7:
 ```
 $ sudo apt-get install python2.7
@@ -36,7 +36,7 @@ $ sudo apt-get install python-qt4 python-qt4-dev pyqt4-dev-tools
 ```
 3) PyAudio:
 ```
-$ sudo apt-get install python-pyaudio (opcional, mas recomendado)
+$ sudo apt-get install python-pyaudio # (opcional, mas recomendado)
 ```
 
 ### Execução:
